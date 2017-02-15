@@ -3384,7 +3384,7 @@ svr4_solib_ops::clear_solib (program_space *pspace) const
 static CORE_ADDR
 svr4_truncate_ptr (CORE_ADDR addr)
 {
-  if (gdbarch_ptr_bit (current_inferior ()->arch ()) == sizeof (CORE_ADDR) * 8)
+  if (gdbarch_ptr_bit (current_inferior ()->arch ()) >= sizeof (CORE_ADDR) * 8)
     /* We don't need to truncate anything, and the bit twiddling below
        will fail due to overflow problems.  */
     return addr;
