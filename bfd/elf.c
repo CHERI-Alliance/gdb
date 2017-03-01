@@ -11532,6 +11532,9 @@ elfcore_grok_freebsd_note (bfd *abfd, Elf_Internal_Note *note)
     case NT_FREEBSD_X86_SEGBASES:
       return elfcore_make_note_pseudosection (abfd, NOTE_PSEUDO_SECTION_X86_SEGBASES, note);
 
+    case NT_FREEBSD_CAPREGS:
+      return elfcore_make_note_pseudosection (abfd, ".reg-cap", note);
+
     case NT_X86_XSTATE:
       return elfcore_grok_xstatereg (abfd, note);
 
