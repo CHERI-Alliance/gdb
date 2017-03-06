@@ -1025,7 +1025,8 @@ print_solib_list_table (std::vector<const solib *> solib_list,
 {
   gdbarch *gdbarch = current_inferior ()->arch ();
   /* "0x", a little whitespace, and two hex digits per byte of pointers.  */
-  int addr_width = 4 + (gdbarch_ptr_bit (gdbarch) / 4);
+  int addr_width = 4 + (std::min (gdbarch_ptr_bit (gdbarch),
+			      gdbarch_addr_bit (gdbarch)) / 4);
   const solib_ops *ops = current_program_space->solib_ops ();
   struct ui_out *uiout = current_uiout;
   bool so_missing_debug_info = false;
