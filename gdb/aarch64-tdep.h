@@ -215,7 +215,34 @@ struct aarch64_gdbarch_tdep : gdbarch_tdep_base
     return gcs_linux_reg_base != -1;
   }
 
+  /* First GCS register.  This is -1 if no GCS registers are available.  */
+  int gcs_reg_base = -1;
+
+  /* First GCS Linux-specific register.  This is -1 if no GCS Linux feature is
+     available.  */
+  int gcs_linux_reg_base = -1;
+
+  /* Function to unwind the GCSPR from the given frame.  */
+  fn_prev_register fn_prev_gcspr = nullptr;
+
+  /* Returns true if the target supports GCS.  */
+  bool
+  has_gcs () const
+  {
+    return gcs_reg_base != -1;
+  }
+
+  /* Returns true if the target supports the Linux GCS feature.  */
+  bool
+  has_gcs_linux () const
+  {
+    return gcs_linux_reg_base != -1;
+  }
+
+  /* First register from the capability set.  */
   int cap_reg_base;
+  /* Last register from the capability set.  */
+  int cap_reg_last;
 
   /* Returns true if the target supports capabilities.  */
   bool has_capability () const

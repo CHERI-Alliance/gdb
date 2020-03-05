@@ -741,6 +741,8 @@
 					/*   Note: name must be "LINUX".  */
 #define NT_ARM_ZT       0x40d           /* AArch64 SME2 ZT registers.  */
 					/*   Note: name must be "LINUX".  */
+#define NT_ARM_MORELLO	0x410		/* AArch capability registers */
+					/* Note name must be "LINUX".  */
 #define NT_ARM_GCS	0x410		/* AArch64 Guarded Control Stack
 					   registers.  */
 					/*   Note  name must be "LINUX".  */

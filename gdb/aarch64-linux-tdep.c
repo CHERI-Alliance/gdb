@@ -28,6 +28,7 @@
 #include "svr4-tls-tdep.h"
 #include "aarch64-tdep.h"
 #include "aarch64-linux-tdep.h"
+#include "arch/aarch64-cap-linux.h"
 #include "osabi.h"
 #include "solib-svr4.h"
 #include "symtab.h"
