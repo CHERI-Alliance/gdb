@@ -1301,6 +1301,7 @@ HFILES_NO_SRCDIR = \
 	arch/aarch32.h \
 	arch/aarch64-gcs-linux.h \
 	arch/aarch64.h \
+	arch/aarch64-cap-linux.h \
 	arch/aarch64-insn.h \
 	arch/aarch64-mte.h \
 	arch/aarch64-mte-linux.h \
