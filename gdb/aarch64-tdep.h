@@ -214,6 +214,14 @@ struct aarch64_gdbarch_tdep : gdbarch_tdep_base
   {
     return gcs_linux_reg_base != -1;
   }
+
+  int cap_reg_base;
+
+  /* Returns true if the target supports capabilities.  */
+  bool has_capability () const
+  {
+    return cap_reg_base != -1;
+  }
 };
 
 const target_desc *aarch64_read_description (const aarch64_features &features);
