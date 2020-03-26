@@ -57,6 +57,8 @@ struct aarch64_features
 
   /* Whether Guarded Control Stack Linux features are supported.  */
   bool gcs_linux = false;
+
+  bool capability = false;
 };
 
 inline bool operator==(const aarch64_features &lhs, const aarch64_features &rhs)
@@ -68,7 +70,8 @@ inline bool operator==(const aarch64_features &lhs, const aarch64_features &rhs)
     && lhs.svq == rhs.svq
     && lhs.sme2 == rhs.sme2
     && lhs.gcs == rhs.gcs
-    && lhs.gcs_linux == rhs.gcs_linux;
+    && lhs.gcs_linux == rhs.gcs_linux
+    && lhs.capability == rhs.capability;
 }
 
 namespace std
@@ -98,6 +101,8 @@ namespace std
       h = h << 1 | features.gcs;
       h = h << 1 | features.gcs_linux;
 
+
+      h = h << 1 | features.capability;
       return h;
     }
   };
