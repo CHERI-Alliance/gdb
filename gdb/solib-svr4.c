@@ -29,6 +29,7 @@
 #include "symfile.h"
 #include "objfiles.h"
 #include "gdbcore.h"
+#include "cli/cli-cmds.h"
 #include "target.h"
 #include "inferior.h"
 #include "infrun.h"
@@ -623,10 +624,30 @@ read_program_header (int type, int *p_arch_size, CORE_ADDR *base_addr)
 }
 
 /* See solib-svr4.h.  */
+/* If non-empty, overrides the value of .interp in binaries.  */
+static std::string program_interpreter;
+
+static void
+show_program_interpreter (struct ui_file *file, int from_tty,
+			  struct cmd_list_element *c, const char *value)
+{
+  if (value == NULL || value[0] == '\0')
+    gdb_printf (file, _("The program interpreter override is not set.\n"));
+  else
+    gdb_printf (file, _("The program interpreter is %s.\n"), value);
+}
 
 std::optional<gdb::byte_vector>
 svr4_find_program_interpreter ()
 {
+  if (!program_interpreter.empty ())
+    {
+      size_t len = program_interpreter.length () + 1;
+      gdb::byte_vector buf (len);
+      memcpy(buf.data (), program_interpreter.c_str (), len);
+      return buf;
+    }
+
   /* If we have a current exec_bfd, use its section table.  */
   if (current_program_space->exec_bfd ()
       && (bfd_get_flavour (current_program_space->exec_bfd ())
@@ -3852,4 +3873,14 @@ INIT_GDB_FILE (svr4_solib)
   /* Set up observers for tracking GLIBC TLS module id slots.  */
   gdb::observers::solib_loaded.attach (tls_maybe_fill_slot, "solib-svr4");
   gdb::observers::solib_unloaded.attach (tls_maybe_erase_slot, "solib-svr4");
+
+  add_setshow_optional_filename_cmd ("program-interpreter", class_support,
+				     &program_interpreter, _("\
+Set a program interpreter override."), _("\
+Show the current program interpreter override."), _("\
+The program interpreter override is used to locate a program interpreter\n\
+instead of the .interp section."),
+				     NULL,
+				     show_program_interpreter,
+				     &setlist, &showlist);
 }
