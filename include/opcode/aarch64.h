@@ -675,6 +675,8 @@ enum aarch64_opnd
   AARCH64_OPND_Rn,	/* Integer register as source.  */
   AARCH64_OPND_Rm,	/* Integer register as source.  */
   AARCH64_OPND_Rt,	/* Integer register used in ld/st instructions.  */
+  AARCH64_OPND_Wt,	/* 32-bit integer register used in ld/st
+			   instructions.  */
   AARCH64_OPND_Rt2,	/* Integer register used in ld/st pair instructions.  */
   AARCH64_OPND_X16,	/* Integer register x16 in chkfeat instruction.  */
   AARCH64_OPND_Rt_LS64,	/* Integer register used in LS64 instructions.  */
