@@ -3658,8 +3658,12 @@ aarch64_force_reloc (struct fix *fixp)
       return 1;
 
     case BFD_RELOC_AARCH64_ADR_LO21_PCREL:
+    case BFD_RELOC_MORELLO_BRANCH19:
+    case BFD_RELOC_MORELLO_TSTBR14:
     case BFD_RELOC_AARCH64_BRANCH19:
     case BFD_RELOC_AARCH64_TSTBR14:
+    case BFD_RELOC_MORELLO_CALL26:
+    case BFD_RELOC_MORELLO_JUMP26:
     case BFD_RELOC_AARCH64_CALL26:
     case BFD_RELOC_AARCH64_JUMP26:
       gas_assert (fixp->fx_addsy != NULL);
@@ -7960,21 +7964,31 @@ bad_adrdp:
 		    /* e.g. CBZ or B.COND  */
 		    gas_assert (operands[i] == AARCH64_OPND_ADDR_PCREL9
 				|| operands[i] == AARCH64_OPND_ADDR_PCREL19);
-		    inst.reloc.type = (operands[i] == AARCH64_OPND_ADDR_PCREL9)
+		    inst.reloc.type = (c64 ? BFD_RELOC_MORELLO_BRANCH19
+				       : (operands[i] == AARCH64_OPND_ADDR_PCREL9)
 				       ? BFD_RELOC_AARCH64_BRANCH9
-				       : BFD_RELOC_AARCH64_BRANCH19;
+				       : BFD_RELOC_AARCH64_BRANCH19);
 		    break;
 		  case testbranch:
 		    /* e.g. TBZ  */
 		    gas_assert (operands[i] == AARCH64_OPND_ADDR_PCREL14);
-		    inst.reloc.type = BFD_RELOC_AARCH64_TSTBR14;
+		    inst.reloc.type = (c64 ? BFD_RELOC_MORELLO_TSTBR14
+				       : BFD_RELOC_AARCH64_TSTBR14);
 		    break;
 		  case branch_imm:
 		    /* e.g. B or BL  */
-		    gas_assert (operands[i] == AARCH64_OPND_ADDR_PCREL26);
-		    inst.reloc.type =
-		      (opcode->op == OP_BL) ? BFD_RELOC_AARCH64_CALL26
-			 : BFD_RELOC_AARCH64_JUMP26;
+		      {
+			enum aarch64_opnd jump, call;
+
+			gas_assert (operands[i] == AARCH64_OPND_ADDR_PCREL26);
+
+			jump = (c64 ? BFD_RELOC_MORELLO_JUMP26
+				: BFD_RELOC_AARCH64_JUMP26);
+			call = (c64 ? BFD_RELOC_MORELLO_CALL26
+				: BFD_RELOC_AARCH64_CALL26);
+
+			inst.reloc.type = opcode->op == OP_BL ? call : jump;
+		      }
 		    break;
 		  case loadlit:
 		    gas_assert (operands[i] == AARCH64_OPND_ADDR_PCREL19
@@ -10343,6 +10357,7 @@ md_apply_fix (fixS * fixP, valueT * valP, segT seg)
 	}
       break;
     case BFD_RELOC_AARCH64_BRANCH19:
+    case BFD_RELOC_MORELLO_BRANCH19:
       if (fixP->fx_done || !seg->use_rela_p)
 	{
 	  if (value & 3)
@@ -10357,6 +10372,7 @@ md_apply_fix (fixS * fixP, valueT * valP, segT seg)
 	}
       break;
 
+    case BFD_RELOC_MORELLO_TSTBR14:
     case BFD_RELOC_AARCH64_TSTBR14:
       if (fixP->fx_done || !seg->use_rela_p)
 	{
@@ -10372,6 +10388,8 @@ md_apply_fix (fixS * fixP, valueT * valP, segT seg)
 	}
       break;
 
+    case BFD_RELOC_MORELLO_CALL26:
+    case BFD_RELOC_MORELLO_JUMP26:
     case BFD_RELOC_AARCH64_CALL26:
     case BFD_RELOC_AARCH64_JUMP26:
       if (fixP->fx_done || !seg->use_rela_p)
@@ -10904,6 +10922,10 @@ aarch64_fix_adjustable (struct fix *fixP)
     case BFD_RELOC_AARCH64_TSTBR14:
     case BFD_RELOC_AARCH64_JUMP26:
     case BFD_RELOC_AARCH64_CALL26:
+    case BFD_RELOC_MORELLO_BRANCH19:
+    case BFD_RELOC_MORELLO_TSTBR14:
+    case BFD_RELOC_MORELLO_JUMP26:
+    case BFD_RELOC_MORELLO_CALL26:
       if (fixP->tc_fix_data.c64 || AARCH64_IS_C64 (fixP->fx_addsy))
 	return false;
       break;
