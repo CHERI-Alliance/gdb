@@ -8702,12 +8702,16 @@ elfNN_aarch64_output_arch_local_syms (bfd *output_bfd,
 static bool
 elfNN_aarch64_new_section_hook (bfd *abfd, asection *sec)
 {
-  _aarch64_elf_section_data *sdata;
+  if (!sec->used_by_bfd)
+    {
+      _aarch64_elf_section_data *sdata;
+      size_t amt = sizeof (*sdata);
 
-  sdata = bfd_zalloc (abfd, sizeof (*sdata));
-  if (sdata == NULL)
-    return false;
-  sec->used_by_bfd = sdata;
+      sdata = bfd_zalloc (abfd, amt);
+      if (sdata == NULL)
+	      return false;
+      sec->used_by_bfd = sdata;
+    }
 
   return _bfd_elf_new_section_hook (abfd, sec);
 }
