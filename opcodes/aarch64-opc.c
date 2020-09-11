@@ -357,6 +357,8 @@ const aarch64_field aarch64_fields[] =
 		   XXX We should make the SF fields into full fields throughout
 		   the code base and even identify capability registers that
 		   way.  The OP in the altbase instructions allow that.  */
+    { 22,  1 },	/* altbase_sf2: Size bit in altbase LDUR.  */
+    { 22,  2 },	/* altbase_sf3: Size bits in altbase SIMD LDUR.  */
     { 13,  3 },	/* asisdlso_opcode: opcode in advsimd ld/st single element.  */
     { 19,  5 },	/* b40: in the test bit and branch instructions.  */
     { 31,  1 },	/* b5: in the test bit and branch instructions.  */
@@ -2377,6 +2379,7 @@ operand_general_constraint_met_p (aarch64_feature_set features,
 	    }
 	  break;
 	case AARCH64_OPND_ADDR_OFFSET:
+	case AARCH64_OPND_CAPADDR_SIMM9:
 	case AARCH64_OPND_ADDR_SIMM9:
 	  /* Unscaled signed 9 bits immediate offset.  */
 	  if (!value_in_range_p (opnd->addr.offset.imm, -256, 255))
@@ -4310,6 +4313,7 @@ aarch64_print_operand (char *buf, size_t size, bfd_vma pc,
   switch (opnd->type)
     {
     case AARCH64_OPND_Rsz:
+    case AARCH64_OPND_Rsz2:
     case AARCH64_OPND_Rd:
     case AARCH64_OPND_Rn:
     case AARCH64_OPND_Rm:
@@ -4432,6 +4436,7 @@ aarch64_print_operand (char *buf, size_t size, bfd_vma pc,
 		  style_imm (styler, "#%" PRIi64, opnd->shifter.amount));
       break;
 
+    case AARCH64_OPND_Fsz:
     case AARCH64_OPND_Fd:
     case AARCH64_OPND_Fn:
     case AARCH64_OPND_Fm:
@@ -4441,6 +4446,7 @@ aarch64_print_operand (char *buf, size_t size, bfd_vma pc,
     case AARCH64_OPND_Sd:
     case AARCH64_OPND_Sn:
     case AARCH64_OPND_Sm:
+    case AARCH64_OPND_St:
     case AARCH64_OPND_SVE_VZn:
     case AARCH64_OPND_SVE_Vd:
     case AARCH64_OPND_SVE_Vm:
@@ -5133,9 +5139,12 @@ aarch64_print_operand (char *buf, size_t size, bfd_vma pc,
 	 styler);
       break;
 
+    case AARCH64_OPND_CAPADDR_SIMM9:
     case AARCH64_OPND_CAPADDR_SIMM7:
       print_immediate_offset_address
-	(buf, size, opnd, get_cap_reg_name (opnd->addr.base_regno, 1), styler);
+	(buf, size, opnd,
+	 get_altbase_reg_name (features, opnd->addr.base_regno, 1, opcode),
+	 styler);
       break;
 
     case AARCH64_OPND_A64C_ADDR_SIMM9:
