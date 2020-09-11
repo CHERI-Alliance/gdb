@@ -19,10 +19,10 @@
    see <http://www.gnu.org/licenses/>.  */
 
 extern void bfd_elf64_aarch64_init_maps
-  (bfd *);
+  (bfd *, struct bfd_link_info *);
 
 extern void bfd_elf32_aarch64_init_maps
-  (bfd *);
+  (bfd *, struct bfd_link_info *);
 
 /* Types of PLTs based on the level of security.  This would be a
    bit-mask to denote which of the combinations of security features
@@ -171,6 +171,11 @@ extern bool elf64_aarch64_size_stubs
   (bfd *, bfd *, struct bfd_link_info *, bfd_signed_vma,
    struct bfd_section * (*) (const char *, struct bfd_section *),
    void (*) (void));
+
+extern void elf64_c64_resize_sections (bfd *, struct bfd_link_info *,
+				       void (*) (asection *, bfd_vma),
+				       void (*) (void));
+
 extern bool elf64_aarch64_build_stubs
   (struct bfd_link_info *);
 /* AArch64 stub generation support for ELF32.  Called from the linker.  */
@@ -195,6 +200,10 @@ extern bool elf32_aarch64_size_relative_relocs
   (struct bfd_link_info *, bool *);
 extern bool elf32_aarch64_finish_relative_relocs
   (struct bfd_link_info *);
+
+extern void elf32_c64_resize_sections (bfd *, struct bfd_link_info *,
+				       void (*) (asection *, bfd_vma),
+				       void (*) (void));
 
 /* Take the PAGE component of an address or offset.  */
 #define PG(x)	     ((x) & ~ (bfd_vma) 0xfff)
