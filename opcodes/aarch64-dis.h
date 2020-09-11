@@ -144,7 +144,7 @@ AARCH64_DECL_OPD_EXTRACTOR (ext_plain_shrimm);
 AARCH64_DECL_OPD_EXTRACTOR (ext_sve_reglist_zt);
 AARCH64_DECL_OPD_EXTRACTOR (ext_rcpc3_addr_opt_offset);
 AARCH64_DECL_OPD_EXTRACTOR (ext_rcpc3_addr_offset);
-
+AARCH64_DECL_OPD_EXTRACTOR (ext_a64c_aimm);
 
 #undef AARCH64_DECL_OPD_EXTRACTOR
 

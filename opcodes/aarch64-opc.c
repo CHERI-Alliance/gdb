@@ -348,6 +348,7 @@ const aarch64_field aarch64_fields[] =
     { 14,  1 }, /* SVE_xs_14: UXTW/SXTW select (bit 14).  */
     { 22,  1 }, /* SVE_xs_22: UXTW/SXTW select (bit 22).  */
     { 22,  1 },	/* S_imm10: in LDRAA and LDRAB instructions.  */
+    { 22,  1 },	/* a64c_shift_ai: Shift bit in immediate ADD/SUB.  */
     { 16,  3 },	/* abc: a:b:c bits in AdvSIMD modified immediate.  */
     { 13,  3 },	/* asisdlso_opcode: opcode in advsimd ld/st single element.  */
     { 19,  5 },	/* b40: in the test bit and branch instructions.  */
@@ -2737,6 +2738,7 @@ operand_general_constraint_met_p (const aarch64_opnd_info *opnds, int idx,
       switch (type)
 	{
 	case AARCH64_OPND_AIMM:
+	case AARCH64_OPND_A64C_AIMM:
 	  if (opnd->shifter.kind != AARCH64_MOD_LSL)
 	    {
 	      set_other_error (mismatch_detail, idx,
@@ -3362,6 +3364,7 @@ operand_general_constraint_met_p (const aarch64_opnd_info *opnds, int idx,
       assert (idx == 1 || idx == 2);
       switch (type)
 	{
+	case AARCH64_OPND_A64C_Rm_EXT:
 	case AARCH64_OPND_Rm_EXT:
 	  if (!aarch64_extend_operator_p (opnd->shifter.kind)
 	      && opnd->shifter.kind != AARCH64_MOD_LSL)
@@ -3374,7 +3377,8 @@ operand_general_constraint_met_p (const aarch64_opnd_info *opnds, int idx,
 	     (i.e. SP), in which case it defaults to LSL. The LSL alias is
 	     only valid when "Rd" or "Rn" is '11111', and is preferred in that
 	     case.  */
-	  if (!aarch64_stack_pointer_p (opnds + 0)
+	  if (type == AARCH64_OPND_Rm_EXT
+	      && !aarch64_stack_pointer_p (opnds + 0)
 	      && (idx != 2 || !aarch64_stack_pointer_p (opnds + 1)))
 	    {
 	      if (!opnd->shifter.operator_present)
@@ -4196,6 +4200,7 @@ aarch64_print_operand (char *buf, size_t size, bfd_vma pc,
 						     opnd->qualifier, 1)));
       break;
 
+    case AARCH64_OPND_A64C_Rm_EXT:
     case AARCH64_OPND_Rm_EXT:
       kind = opnd->shifter.kind;
       assert (idx == 1 || idx == 2);
@@ -4721,6 +4726,7 @@ aarch64_print_operand (char *buf, size_t size, bfd_vma pc,
       snprintf (buf, size, "%s", style_imm (styler, "#0.0"));
       break;
 
+    case AARCH64_OPND_A64C_AIMM:
     case AARCH64_OPND_LIMM:
     case AARCH64_OPND_AIMM:
     case AARCH64_OPND_HALF:
