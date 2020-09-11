@@ -335,6 +335,10 @@ enum aarch64_feature_bit {
   AARCH64_FEATURE_SVE2p1_SME2p1,
   /* +sve2p2 or +sme2p2 */
   AARCH64_FEATURE_SVE2p2_SME2p2,
+  DUMMY1,
+  /* Capability extensions.  */
+  AARCH64_FEATURE_A64C,
+  AARCH64_FEATURE_C64,
   AARCH64_NUM_FEATURES
 };
 
@@ -481,6 +485,11 @@ static_assert ((AA64_REPLICATE (REP_PLUS, AA64_REPVAL,
 					 | AARCH64_FEATBIT (X, LSUI)	\
 					 | AARCH64_FEATBIT (X, OCCMO)	\
 					 | AARCH64_FEATBIT (X, SVE2p2))
+#define AARCH64_ARCH_MORELLO_FEATURES(X) (AARCH64_FEATBIT (X, A64C)	\
+					 | AARCH64_FEATBIT (X, F16_FML)	\
+					 | AARCH64_FEATBIT (X, DOTPROD)	\
+					 | AARCH64_FEATBIT (X, RCPC)	\
+					 | AARCH64_FEATBIT (X, SSBS))
 
 /* Architectures are the sum of the base and extensions.  */
 #define AARCH64_ARCH_V8A(X)	(AARCH64_FEATBIT (X, V8) \
@@ -522,6 +531,10 @@ static_assert ((AA64_REPLICATE (REP_PLUS, AA64_REPVAL,
 				 | AARCH64_ARCH_V9_5A_FEATURES (X))
 #define AARCH64_ARCH_V9_6A(X)	(AARCH64_ARCH_V9_5A (X) \
 				 | AARCH64_ARCH_V9_6A_FEATURES (X))
+
+#define AARCH64_ARCH_MORELLO(X)	(AARCH64_ARCH_V8_2A (X)	\
+				 | AARCH64_ARCH_MORELLO_FEATURES (X))
+
 
 #define AARCH64_ARCH_NONE(X)	0
 
@@ -646,6 +659,7 @@ enum aarch64_operand_class
   AARCH64_OPND_CLASS_IMMEDIATE,
   AARCH64_OPND_CLASS_SYSTEM,
   AARCH64_OPND_CLASS_COND,
+  AARCH64_OPND_CLASS_CAP_REG,
 };
 
 /* Operand code that helps both parsing and coding.
@@ -1025,6 +1039,18 @@ enum aarch64_opnd
   AARCH64_OPND_RCPC3_ADDR_POSTIND,	 /* [<Xn|SP>], #<imm>.  */
   AARCH64_OPND_RCPC3_ADDR_PREIND_WB, 	 /* [<Xn|SP>, #<imm>]!.  */
   AARCH64_OPND_RCPC3_ADDR_OFFSET,
+
+  AARCH64_OPND_Cad,             /* A capability register as destination.  */
+  AARCH64_OPND_Cam,             /* Capability register as source.  */
+  AARCH64_OPND_Can,             /* Capability register as source.  */
+  AARCH64_OPND_Cas,             /* A capability register.  */
+  AARCH64_OPND_Cat,             /* Capability register destination in load
+				   store instructions.  */
+  AARCH64_OPND_Cat2,            /* Capability register destination 2 in load
+				   store instructions.  */
+  AARCH64_OPND_Cad_SP,          /* Capability register or Cap SP as
+				   destination.  */
+  AARCH64_OPND_Can_SP,		/* Capability register or Cap SP as source. */
 };
 
 /* Qualifier constrains an operand.  It either specifies a variant of an
@@ -1094,6 +1120,9 @@ enum aarch64_opnd_qualifier
   /* Used in scaled signed immediate that are scaled by a Tag granule
      like in stg, st2g, etc.   */
   AARCH64_OPND_QLF_imm_tag,
+
+  /* Capability Registers.  */
+  AARCH64_OPND_QLF_CA,
 
   /* Constraint on value.  */
   AARCH64_OPND_QLF_CR,		/* CRn, CRm. */
@@ -1248,7 +1277,8 @@ enum aarch64_insn_class
   sve_index1,
   rcpc3,
   lut,
-  last_iclass = lut
+  a64c,
+  last_iclass = a64c
 };
 
 /* Opcode enumerators.  */

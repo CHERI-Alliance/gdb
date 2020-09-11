@@ -2791,6 +2791,18 @@
 
 /* Opcode table.  */
 
+#define QL2_A64C_CA_CA		\
+{				\
+  QLF2(CA, CA),			\
+}
+
+/* Opcode table.
+
+  Any SVE or SVE2 feature must include AARCH64_FEATURE_{SVE|SVE2} in its
+  bitmask, even if this is implied by other selected feature bits.  This
+  allows verify_constraints to identify SVE instructions when selecting an
+  error message for MOVPRFX constraint violations.  */
+
 static const aarch64_feature_set aarch64_feature_v8 =
   AARCH64_FEATURE (V8);
 static const aarch64_feature_set aarch64_feature_fp =
@@ -3010,6 +3022,9 @@ static const aarch64_feature_set aarch64_feature_sve_sme2p2 =
 static const aarch64_feature_set aarch64_feature_sve2p2_sme2p2 =
   AARCH64_FEATURE (SVE2p2_SME2p2);
 
+static const aarch64_feature_set aarch64_feature_a64c =
+  AARCH64_FEATURE (A64C);
+
 #define CORE		&aarch64_feature_v8
 #define FP		&aarch64_feature_fp
 #define SIMD		&aarch64_feature_simd
@@ -3119,6 +3134,7 @@ static const aarch64_feature_set aarch64_feature_sve2p2_sme2p2 =
 #define SME2p2		&aarch64_feature_sme2p2
 #define SVE_SME2p2	&aarch64_feature_sve_sme2p2
 #define SVE2p2_SME2p2	&aarch64_feature_sve2p2_sme2p2
+#define A64C		&aarch64_feature_a64c
 
 #define CORE_INSN(NAME,OPCODE,MASK,CLASS,OP,OPS,QUALS,FLAGS) \
   { NAME, OPCODE, MASK, CLASS, OP, CORE, OPS, QUALS, FLAGS | F_INVALID_IMM_SYMS_1, 0, 0, NULL }
@@ -3407,6 +3423,8 @@ static const aarch64_feature_set aarch64_feature_sve2p2_sme2p2 =
 #define SME2p2_INSN(NAME,OPCODE,MASK,CLASS,OPS,QUALS,FLAGS,TIED) \
   { NAME, OPCODE, MASK, CLASS, 0, SME2p2, OPS, QUALS, \
     F_STRICT | FLAGS, 0, TIED, NULL }
+#define A64C_INSN(NAME,OPCODE,MASK,CLASS,OP,OPS,QUALS,FLAGS) \
+  { NAME, OPCODE, MASK, CLASS, OP, A64C, OPS, QUALS, FLAGS, 0, 0, NULL }
 
 #define MOPS_CPY_OP1_OP2_PME_INSN(NAME, OPCODE, MASK, FLAGS, CONSTRAINTS) \
   MOPS_INSN (NAME, OPCODE, MASK, 0, \

@@ -294,6 +294,10 @@ struct reloc_entry
   BASIC_REG_TYPE(FP_S)	/* s[0-31] */	\
   BASIC_REG_TYPE(FP_D)	/* d[0-31] */	\
   BASIC_REG_TYPE(FP_Q)	/* q[0-31] */	\
+  BASIC_REG_TYPE(CA_N)	/* c[0-30] */	\
+  BASIC_REG_TYPE(CA_SP)	/* csp     */ 	\
+  BASIC_REG_TYPE(CA_Z)	/* czr     */ 	\
+  BASIC_REG_TYPE(CA_D)	/* ddc     */ 	\
   BASIC_REG_TYPE(V)	/* v[0-31] */	\
   BASIC_REG_TYPE(Z)	/* z[0-31] */	\
   BASIC_REG_TYPE(P)	/* p[0-15] */	\
@@ -356,6 +360,9 @@ struct reloc_entry
   MULTI_REG_TYPE(ZA_ZAT, REG_TYPE(ZA) | REG_TYPE(ZAT))			\
   /* A horizontal or vertical slice of a ZA tile.  */			\
   MULTI_REG_TYPE(ZATHV, REG_TYPE(ZATH) | REG_TYPE(ZATV))		\
+  /* Typecheck: any capability register (inc CSP) */			\
+  MULTI_REG_TYPE(CA_N_SP, REG_TYPE(CA_N) | REG_TYPE(CA_SP))		\
+  MULTI_REG_TYPE(CA_N_Z, REG_TYPE(CA_N) | REG_TYPE(CA_Z))		\
   /* Pseudo type to mark the end of the enumerator sequence.  */	\
   END_REG_TYPE(MAX)
 
@@ -506,6 +513,16 @@ get_reg_expected_msg (unsigned int mask, unsigned int seen)
   if (mask == (reg_type_masks[REG_TYPE_Z] | reg_type_masks[REG_TYPE_ZATHV]))
     return N_("expected an SVE vector register or ZA tile slice"
 	      " at operand %d");
+
+  /* Capability registers.  */
+  if (mask == reg_type_masks[REG_TYPE_CA_N])
+    return N_("Capability register C0 - C30 expected");
+  if (mask == reg_type_masks[REG_TYPE_CA_SP])
+    return N_("Capability register CSP expected");
+  if (mask == reg_type_masks[REG_TYPE_CA_N_SP])
+    return N_("Capability register C0 - C30 or CSP expected");
+  if (mask == reg_type_masks[REG_TYPE_CA_Z])
+    return N_("Capability register CZR expected");
 
   return NULL;
 }
@@ -991,6 +1008,11 @@ aarch64_addr_reg_parse (char **ccp, aarch64_reg_type reg_type,
 	  return NULL;
 	}
       str += 2;
+      break;
+
+    case REG_TYPE_CA_N:
+    case REG_TYPE_CA_SP:
+      *qualifier = AARCH64_OPND_QLF_CA;
       break;
 
     default:
@@ -4377,8 +4399,16 @@ static bool
 parse_address (char **str, aarch64_opnd_info *operand)
 {
   aarch64_opnd_qualifier_t base_qualifier, offset_qualifier;
+
+  aarch64_reg_type base;
+
+  if (AARCH64_CPU_HAS_FEATURE (cpu_variant, C64))
+    base = REG_TYPE_CA_N_SP;
+  else
+    base = REG_TYPE_R64_SP;
+
   return parse_address_main (str, operand, &base_qualifier, &offset_qualifier,
-			     REG_TYPE_R64_SP, REG_TYPE_R_ZR, SHIFTED_NONE);
+			     base, REG_TYPE_R_ZR, SHIFTED_NONE);
 }
 
 /* Parse an address in which SVE vector registers and MUL VL are allowed.
@@ -7689,7 +7719,9 @@ parse_operands (char *str, const aarch64_opcode *opcode)
 	    /* Then retry, matching the specific syntax of these addresses.  */
 	    str = start;
 	    po_char_or_fail ('[');
-	    po_reg_or_fail (REG_TYPE_R64_SP);
+	    po_reg_or_fail (AARCH64_CPU_HAS_FEATURE (cpu_variant, C64)
+			    ? REG_TYPE_CA_N_SP : REG_TYPE_R64_SP);
+
 	    /* Accept optional ", #0".  */
 	    if (operands[i] == AARCH64_OPND_ADDR_SIMPLE
 		&& skip_past_char (&str, ','))
@@ -9003,6 +9035,13 @@ static const reg_entry reg_names[] = {
 
   REGDEF (wzr, 31, ZR_32), REGDEF (WZR, 31, ZR_32),
   REGDEF (xzr, 31, ZR_64), REGDEF (XZR, 31, ZR_64),
+
+  /* Capability Registers.  */
+  REGSET31 (c, CA_N), REGSET31 (C, CA_N),
+  REGDEF (csp, 31, CA_SP), REGDEF (CSP, 31, CA_SP),
+  REGDEF (czr, 31, CA_Z), REGDEF (CZR, 31, CA_Z),
+  REGDEF (ddc, 33, CA_D), REGDEF (DDC, 33, CA_D),
+  REGDEF_ALIAS (clr, 30, CA_N), REGDEF_ALIAS (CLR, 30, CA_N),
 
   /* Floating-point single precision registers.  */
   REGSET (s, FP_S), REGSET (S, FP_S),
@@ -10777,6 +10816,7 @@ static const struct aarch64_arch_option_table aarch64_archs[] = {
   {"armv9.4-a",	AARCH64_ARCH_FEATURES (V9_4A)},
   {"armv9.5-a", AARCH64_ARCH_FEATURES (V9_5A)},
   {"armv9.6-a", AARCH64_ARCH_FEATURES (V9_6A)},
+  {"morello", AARCH64_ARCH_FEATURES (MORELLO)},
   {NULL, AARCH64_NO_FEATURES}
 };
 
@@ -10905,6 +10945,10 @@ static const struct aarch64_option_cpu_value_table aarch64_features[] = {
   {"pops",		AARCH64_FEATURE (PoPS), AARCH64_NO_FEATURES},
   {"sve2p2",		AARCH64_FEATURE (SVE2p2), AARCH64_FEATURE (SVE2p1)},
   {"sme2p2",		AARCH64_FEATURE (SME2p2), AARCH64_FEATURE (SME2p1)},
+  {"a64c",		AARCH64_FEATURE (A64C),
+			AARCH64_NO_FEATURES},
+  {"c64",		AARCH64_FEATURE (C64),
+			AARCH64_FEATURE (A64C)},
   {NULL,		AARCH64_NO_FEATURES, AARCH64_NO_FEATURES},
 };
 
