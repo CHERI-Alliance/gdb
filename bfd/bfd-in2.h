@@ -6791,6 +6791,11 @@ enum bfd_reloc_code_real
      BFD_RELOC_AARCH64_ADR_GOT_PAGE.  Valid in LP64 ABI only.  */
   BFD_RELOC_AARCH64_LD64_GOT_LO12_NC,
 
+  /* Unsigned 12 bit byte offset for 128 bit load/store from the page of
+     the GOT entry for this symbol.  Used in conjunction with
+     BFD_RELOC_MORELLO_ADR_GOT_PAGE.  Valid in C64 ABI only.  */
+  BFD_RELOC_MORELLO_LD128_GOT_LO12_NC,
+
   /* Unsigned 12 bit byte offset for 32 bit load/store from the page of
      the GOT entry for this symbol.  Used in conjunction with
      BFD_RELOC_AARCH64_ADR_GOT_PAGE.  Valid in ILP32 ABI only.  */
@@ -7010,6 +7015,9 @@ enum bfd_reloc_code_real
 
   /* Morello Capability initialization.  */
   BFD_RELOC_MORELLO_CAPINIT,
+
+  /* Morello Capability global data.  */
+  BFD_RELOC_MORELLO_GLOB_DAT,
 
   /* Morello relative relocation for capabilities.  */
   BFD_RELOC_MORELLO_RELATIVE,
