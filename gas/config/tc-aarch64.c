@@ -5068,7 +5068,7 @@ static int sysreg_checking_p = 0;
 */
 
 static int
-parse_sys_reg (char **str, htab_t sys_regs,
+parse_sys_reg (const aarch64_opcode *opcode, char **str, htab_t sys_regs,
 	       int imple_defined_p, int pstatefield_p,
 	       uint32_t* flags, bool sysreg128_p)
 {
@@ -5111,6 +5111,9 @@ parse_sys_reg (char **str, htab_t sys_regs,
     }
   else
     {
+      if (!aarch64_sys_reg_capreg_supported_p (opcode->iclass, o))
+	return PARSE_FAIL;
+
       if (pstatefield_p && sysreg_checking_p
 	  && !aarch64_pstatefield_supported_p (cpu_variant, o))
 	as_bad (_("selected processor does not support PSTATE field "
@@ -8422,7 +8425,8 @@ addr_uimm:
 	  {
 	    bool sysreg128_p = operands[i] == AARCH64_OPND_SYSREG128;
 	    uint32_t sysreg_flags;
-	    if ((val = parse_sys_reg (&str, aarch64_sys_regs_hsh, 1, 0,
+
+	    if ((val = parse_sys_reg (opcode, &str, aarch64_sys_regs_hsh, 1, 0,
 				      &sysreg_flags,
 				      sysreg128_p)) == PARSE_FAIL)
 	      {
@@ -8437,8 +8441,8 @@ addr_uimm:
 	case AARCH64_OPND_PSTATEFIELD:
 	  {
 	    uint32_t sysreg_flags;
-	    if ((val = parse_sys_reg (&str, aarch64_pstatefield_hsh, 0, 1,
-				      &sysreg_flags, false)) == PARSE_FAIL)
+	    if ((val = parse_sys_reg (opcode, &str, aarch64_pstatefield_hsh, 0,
+				      1, &sysreg_flags, false)) == PARSE_FAIL)
 	      {
 	        set_syntax_error (_("unknown or missing PSTATE field name"));
 	        goto failure;
