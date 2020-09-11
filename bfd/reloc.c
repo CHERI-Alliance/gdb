@@ -7393,6 +7393,19 @@ ENUMX
 ENUMDOC
   AArch64 TLS DESC relocations.
 ENUM
+  BFD_RELOC_MORELLO_TLSDESC_ADR_PAGE20
+ENUMDOC
+  Morello TLS DESC relocation.
+ENUM
+  BFD_RELOC_MORELLO_TLSDESC_LD128_LO12
+ENUMDOC
+  bit[11:4] of byte offset to TLS base address, encoded in ldst instructions.
+ENUM
+  BFD_RELOC_MORELLO_TLSDESC_CALL
+ENUMDOC
+  Relocation to identify the BLR call which performs an indirect call to the
+  TLS descriptor function.
+ENUM
   BFD_RELOC_AARCH64_COPY
 ENUMX
   BFD_RELOC_AARCH64_GLOB_DAT
@@ -7436,6 +7449,10 @@ ENUM
   BFD_RELOC_MORELLO_IRELATIVE
 ENUMDOC
   C64 support for STT_GNU_IFUNC.
+ENUM
+  BFD_RELOC_MORELLO_TLSDESC
+ENUMDOC
+  Morello TLS relocation, identifies the TLS descriptor to be filled.
 ENUM
   BFD_RELOC_AARCH64_RELOC_END
 ENUMDOC
