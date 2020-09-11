@@ -145,6 +145,7 @@ AARCH64_DECL_OPD_EXTRACTOR (ext_sve_reglist_zt);
 AARCH64_DECL_OPD_EXTRACTOR (ext_rcpc3_addr_opt_offset);
 AARCH64_DECL_OPD_EXTRACTOR (ext_rcpc3_addr_offset);
 AARCH64_DECL_OPD_EXTRACTOR (ext_a64c_aimm);
+AARCH64_DECL_OPD_EXTRACTOR (ext_a64c_immv);
 
 #undef AARCH64_DECL_OPD_EXTRACTOR
 

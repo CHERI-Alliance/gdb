@@ -1802,7 +1802,8 @@ calc_ldst_datasize (const aarch64_opnd_info *opnds)
    represent an error.  */
 
 static bool
-operand_general_constraint_met_p (const aarch64_opnd_info *opnds, int idx,
+operand_general_constraint_met_p (aarch64_feature_set features,
+				  const aarch64_opnd_info *opnds, int idx,
 				  enum aarch64_opnd type,
 				  const aarch64_opcode *opcode,
 				  aarch64_operand_error *mismatch_detail)
@@ -1884,6 +1885,15 @@ operand_general_constraint_met_p (const aarch64_opnd_info *opnds, int idx,
 	  break;
 	default:
 	  break;
+	}
+      /* Reject A64 RET with default operand when in C64 mode.  */
+      if (opcode->iclass == branch_reg
+	  && AARCH64_CPU_HAS_FEATURE (features, C64)
+	  && !opnd->present)
+	{
+	  set_other_error (mismatch_detail, idx,
+			   _("capability register expected"));
+	  return 0;
 	}
       break;
 
@@ -2915,6 +2925,15 @@ operand_general_constraint_met_p (const aarch64_opnd_info *opnds, int idx,
 	  }
 	  break;
 
+	case AARCH64_OPND_A64C_IMMV4:
+	  if (opnd->imm.value != 4)
+	    {
+	      set_other_error (mismatch_detail, idx,
+			       _("immediate #4 expected"));
+	      return 0;
+	    }
+	  break;
+
 	case AARCH64_OPND_IMM0:
 	case AARCH64_OPND_FPIMM0:
 	  if (opnd->imm.value != 0)
@@ -3476,8 +3495,8 @@ operand_general_constraint_met_p (const aarch64_opnd_info *opnds, int idx,
    Un-determined operand qualifiers may get established during the process.  */
 
 bool
-aarch64_match_operands_constraint (aarch64_feature_set features
-				   ATTRIBUTE_UNUSED, aarch64_inst *inst,
+aarch64_match_operands_constraint (aarch64_feature_set features,
+				   aarch64_inst *inst,
 				   aarch64_operand_error *mismatch_detail)
 {
   int i;
@@ -3584,7 +3603,7 @@ aarch64_match_operands_constraint (aarch64_feature_set features
 	  DEBUG_TRACE ("skip the incomplete operand %d", i);
 	  continue;
 	}
-      if (!operand_general_constraint_met_p (inst->operands, i, type,
+      if (!operand_general_constraint_met_p (features, inst->operands, i, type,
 					     inst->opcode, mismatch_detail))
 	{
 	  DEBUG_TRACE ("FAIL on operand %d", i);
@@ -4594,6 +4613,7 @@ aarch64_print_operand (char *buf, size_t size, bfd_vma pc,
 		style_reg (styler, "C%" PRIi64, opnd->imm.value));
       break;
 
+    case AARCH64_OPND_A64C_IMMV4:
     case AARCH64_OPND_A64C_IMM8:
     case AARCH64_OPND_IDX:
     case AARCH64_OPND_MASK:
@@ -5166,9 +5186,11 @@ aarch64_print_operand (char *buf, size_t size, bfd_vma pc,
 
     case AARCH64_OPND_Cad_SP:
     case AARCH64_OPND_Can_SP:
+    case AARCH64_OPND_Cam_SP:
       snprintf (buf, size, "%s", get_cap_reg_name (opnd->reg.regno, 1));
       break;
 
+    case AARCH64_OPND_A64C_CST_REG:
     case AARCH64_OPND_Cat:
     case AARCH64_OPND_Cat2:
     case AARCH64_OPND_Can:
