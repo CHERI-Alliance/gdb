@@ -64,6 +64,10 @@
 #define EH_FRAME_ALIGNMENT (bfd_get_arch_size (stdoutput) == 64 ? 3 : 2)
 #endif
 
+#ifndef tc_cfi_startproc_exp
+# define tc_cfi_startproc_exp(name) (false)
+#endif
+
 #define EH_FRAME_LINKONCE (SUPPORT_FRAME_LINKONCE || compact_eh \
 			   || TARGET_MULTIPLE_EH_FRAME_SECTIONS)
 
@@ -1361,7 +1365,8 @@ dot_cfi_startproc (int ignored ATTRIBUTE_UNUSED)
 	  simple = 1;
 	  restore_line_pointer (c);
 	}
-      else
+      /* Custom arguments to .cfi_startproc.  */
+      else if (!tc_cfi_startproc_exp (name))
 	input_line_pointer = saved_ilp;
     }
   demand_empty_rest_of_line ();
