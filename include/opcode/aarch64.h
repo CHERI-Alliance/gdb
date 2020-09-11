@@ -1646,7 +1646,10 @@ extern const aarch64_opcode aarch64_opcode_table[];
 /* As above, plus PN registers.  */
 #define F_INVALID_IMM_SYMS_3 (3ULL << 42)
 
-/* Next bit is 44.  */
+/* Do no shift immediate operand.  */
+#define F_NOSHIFT (1ULL << 44)
+
+/* Next bit is 45.  */
 
 /* Instruction constraints.  */
 /* This instruction has a predication constraint on the instruction at PC+4.  */
