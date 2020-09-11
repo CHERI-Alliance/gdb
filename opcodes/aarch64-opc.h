@@ -204,6 +204,7 @@ enum aarch64_field_kind
   FLD_imm14,
   FLD_imm16_0,
   FLD_imm16_5,
+  FLD_imm17,
   FLD_imm17_1,
   FLD_imm17_2,
   FLD_imm19,
