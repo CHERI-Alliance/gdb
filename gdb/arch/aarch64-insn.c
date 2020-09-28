@@ -90,6 +90,11 @@ int
 aarch64_decode_b (CORE_ADDR addr, uint32_t insn, int *is_bl,
 		  int32_t *offset)
 {
+  if (aarch64_debug)
+    debug_printf ("aarch64: Entering %s\n", __func__);
+
+  int retval = 0;
+
   /* b  0001 01ii iiii iiii iiii iiii iiii iiii */
   /* bl 1001 01ii iiii iiii iiii iiii iiii iiii */
   if (decode_masked_match (insn, 0x7c000000, 0x14000000))
@@ -102,9 +107,13 @@ aarch64_decode_b (CORE_ADDR addr, uint32_t insn, int *is_bl,
 			    *is_bl ? "bl" : "b",
 			    core_addr_to_string_nz (addr + *offset));
 
-      return 1;
+      retval = 1;
     }
-  return 0;
+
+  if (aarch64_debug)
+    debug_printf ("aarch64: Exiting %s\n", __func__);
+
+  return retval;
 }
 
 /* Decode an opcode if it represents a conditional branch instruction.
@@ -121,6 +130,11 @@ int
 aarch64_decode_bcond (CORE_ADDR addr, uint32_t insn, unsigned *cond,
 		      int32_t *offset)
 {
+  if (aarch64_debug)
+    debug_printf ("aarch64: Entering %s\n", __func__);
+
+  int retval = 0;
+
   /* b.cond  0101 0100 iiii iiii iiii iiii iii0 cccc */
   if (decode_masked_match (insn, 0xff000010, 0x54000000))
     {
@@ -132,7 +146,11 @@ aarch64_decode_bcond (CORE_ADDR addr, uint32_t insn, unsigned *cond,
 			    core_addr_to_string_nz (addr + *offset));
       return 1;
     }
-  return 0;
+
+  if (aarch64_debug)
+    debug_printf ("aarch64: Exiting %s\n", __func__);
+
+  return retval;
 }
 
 /* Decode an opcode if it represents a CBZ or CBNZ instruction.
@@ -150,6 +168,11 @@ int
 aarch64_decode_cb (CORE_ADDR addr, uint32_t insn, int *is64, int *is_cbnz,
 		   unsigned *rn, int32_t *offset)
 {
+  if (aarch64_debug)
+    debug_printf ("aarch64: Entering %s\n", __func__);
+
+  int retval = 0;
+
   /* cbz  T011 010o iiii iiii iiii iiii iiir rrrr */
   /* cbnz T011 010o iiii iiii iiii iiii iiir rrrr */
   if (decode_masked_match (insn, 0x7e000000, 0x34000000))
@@ -165,7 +188,11 @@ aarch64_decode_cb (CORE_ADDR addr, uint32_t insn, int *is64, int *is_cbnz,
 			    core_addr_to_string_nz (addr + *offset));
       return 1;
     }
-  return 0;
+
+  if (aarch64_debug)
+    debug_printf ("aarch64: Exiting %s\n", __func__);
+
+  return retval;
 }
 
 /* Decode an opcode if it represents a TBZ or TBNZ instruction.
@@ -183,6 +210,11 @@ int
 aarch64_decode_tb (CORE_ADDR addr, uint32_t insn, int *is_tbnz,
 		   unsigned *bit, unsigned *rt, int32_t *imm)
 {
+  if (aarch64_debug)
+    debug_printf ("aarch64: Entering %s\n", __func__);
+
+  int retval = 0;
+
   /* tbz  b011 0110 bbbb biii iiii iiii iiir rrrr */
   /* tbnz B011 0111 bbbb biii iiii iiii iiir rrrr */
   if (decode_masked_match (insn, 0x7e000000, 0x36000000))
@@ -198,7 +230,11 @@ aarch64_decode_tb (CORE_ADDR addr, uint32_t insn, int *is_tbnz,
 			    core_addr_to_string_nz (addr + *imm));
       return 1;
     }
-  return 0;
+
+  if (aarch64_debug)
+    debug_printf ("aarch64: Exiting %s\n", __func__);
+
+  return retval;
 }
 
 /* Decode an opcode if it represents an LDR or LDRSW instruction taking a
@@ -217,6 +253,11 @@ int
 aarch64_decode_ldr_literal (CORE_ADDR addr, uint32_t insn, int *is_w,
 			    int *is64, unsigned *rt, int32_t *offset)
 {
+  if (aarch64_debug)
+    debug_printf ("aarch64: Entering %s\n", __func__);
+
+  int retval = 0;
+
   /* LDR    0T01 1000 iiii iiii iiii iiii iiir rrrr */
   /* LDRSW  1001 1000 iiii iiii iiii iiii iiir rrrr */
   if ((insn & 0x3f000000) == 0x18000000)
@@ -239,10 +280,13 @@ aarch64_decode_ldr_literal (CORE_ADDR addr, uint32_t insn, int *is_w,
 			    *is_w ? "ldrsw" : "ldr",
 			    *is64 ? "x" : "w", *rt);
 
-      return 1;
+      retval = 1;
     }
 
-  return 0;
+  if (aarch64_debug)
+    debug_printf ("aarch64: Exiting %s\n", __func__);
+
+  return retval;
 }
 
 /* Visit an instruction INSN by VISITOR with all needed information in DATA.
