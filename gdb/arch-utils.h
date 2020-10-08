@@ -419,4 +419,14 @@ extern enum return_value_convention default_gdbarch_return_value
 extern std::optional<CORE_ADDR> default_get_shadow_stack_pointer
   (gdbarch *gdbarch, regcache *regcache, bool &shadow_stack_enabled);
 
+/* Default implementation of gdbarch_register_has_tag.  */
+extern bool default_register_has_tag (struct gdbarch *gdbarch,
+				      readable_regcache *regcache,
+				      int cookednum);
+
+/* Default implementation of gdbarch_register_tag.  */
+extern bool default_register_tag (struct gdbarch *gdbarch,
+				  readable_regcache *regcache,
+				  int cookednum);
+
 #endif /* GDB_ARCH_UTILS_H */

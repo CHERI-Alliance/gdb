@@ -2930,3 +2930,33 @@ SHADOW_STACK_ENABLED to false.
     predefault="default_get_shadow_stack_pointer",
     invalid=False,
 )
+
+Method(
+    comment="""
+Returns true if register COOKEDNUM has a tag and false otherwise.
+The default is to always return false.
+""",
+    type="bool",
+    name="register_has_tag",
+    params=[
+        ("readable_regcache *", "regcache"),
+        ("int", "cookednum"),
+    ],
+    predefault="default_register_has_tag",
+    invalid=False,
+)
+
+Method(
+    comment="""
+Returns true if the register tag bit is 1 and false otherwise.
+The default is to always return false.
+""",
+    type="bool",
+    name="register_tag",
+    params=[
+        ("readable_regcache *", "regcache"),
+        ("int", "cookednum"),
+    ],
+    predefault="default_register_tag",
+    invalid=False,
+)

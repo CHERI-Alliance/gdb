@@ -1110,6 +1110,24 @@ default_use_target_description_from_corefile_notes (struct gdbarch *gdbarch,
   return true;
 }
 
+/* See arch-utils.h.  */
+bool
+default_register_has_tag (struct gdbarch *gdbarch,
+			  readable_regcache *regcache,
+			  int cookednum)
+{
+  return false;
+}
+
+/* See arch-utils.h.  */
+bool
+default_register_tag (struct gdbarch *gdbarch,
+		      readable_regcache *regcache,
+		      int cookednum)
+{
+  return false;
+}
+
 CORE_ADDR
 default_get_return_buf_addr (struct type *val_type,
 			     const frame_info_ptr &cur_frame)
