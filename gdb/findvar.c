@@ -45,6 +45,44 @@
 you lose
 #endif
 
+/* All 'store' functions accept a host-format integer and store a
+   target-format integer at ADDR which is LEN bytes long.  */
+template<typename T, typename>
+void
+store_integer (gdb::array_view<gdb_byte> dst, enum bfd_endian byte_order,
+	       T val)
+{
+  gdb_byte *p;
+  gdb_byte *startaddr = dst.data ();
+  gdb_byte *endaddr = startaddr + dst.size ();
+
+  /* Start at the least significant end of the integer, and work towards
+     the most significant.  */
+  if (byte_order == BFD_ENDIAN_BIG)
+    {
+      for (p = endaddr - 1; p >= startaddr; --p)
+	{
+	  *p = val & 0xff;
+	  val >>= 8;
+	}
+    }
+  else
+    {
+      for (p = startaddr; p < endaddr; ++p)
+	{
+	  *p = val & 0xff;
+	  val >>= 8;
+	}
+    }
+}
+
+/* Explicit instantiations.  */
+template void store_integer (gdb::array_view<gdb_byte> dst,
+			     bfd_endian byte_order, LONGEST val);
+
+template void store_integer (gdb::array_view<gdb_byte> dst,
+			     bfd_endian byte_order, ULONGEST val);
+
 /* See value.h.  */
 
 value *

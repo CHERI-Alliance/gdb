@@ -25,63 +25,10 @@ T
 extract_integer (gdb::array_view<const gdb_byte> buf, enum bfd_endian byte_order)
 {
   typename std::make_unsigned<T>::type retval = 0;
-
-  /* It is ok if BUF is wider than T, but only if the value is
-     representable.  */
-  bool bad_repr = false;
-  if (buf.size () > (int) sizeof (T))
-    {
-      const size_t end = buf.size () - sizeof (T);
-      if (byte_order == BFD_ENDIAN_BIG)
-	{
-	  for (size_t i = 0; i < end; ++i)
-	    {
-	      /* High bytes == 0 are always ok, and high bytes == 0xff
-		 are ok when the type is signed.  */
-	      if ((buf[i] == 0
-		   || (std::is_signed<T>::value && buf[i] == 0xff))
-		  /* All the high bytes must be the same, no
-		     alternating 0 and 0xff.  */
-		  && (i == 0 || buf[i - 1] == buf[i]))
-		{
-		  /* Ok.  */
-		}
-	      else
-		{
-		  bad_repr = true;
-		  break;
-		}
-	    }
-	  buf = buf.slice (end);
-	}
-      else
-	{
-	  size_t bufsz = buf.size () - 1;
-	  for (size_t i = bufsz; i >= end; --i)
-	    {
-	      /* High bytes == 0 are always ok, and high bytes == 0xff
-		 are ok when the type is signed.  */
-	      if ((buf[i] == 0
-		   || (std::is_signed<T>::value && buf[i] == 0xff))
-		  /* All the high bytes must be the same, no
-		     alternating 0 and 0xff.  */
-		  && (i == bufsz || buf[i] == buf[i + 1]))
-		{
-		  /* Ok.  */
-		}
-	      else
-		{
-		  bad_repr = true;
-		  break;
-		}
-	    }
-	  buf = buf.slice (0, end);
-	}
-    }
-
-  if (bad_repr)
-    error (_("Value cannot be represented as integer of %d bytes."),
-	   (int) sizeof (T));
+  /* FIXME-CHERI: Truncate rather than error when buf is wider than T.
+     This handles 128-bit CHERI capability types being extracted as
+     64-bit integers.  */
+  size_t len = (buf.size () > sizeof (T)) ? sizeof (T) : buf.size ();
 
   /* Start at the most significant end of the integer, and work towards
      the least significant.  */
@@ -95,12 +42,12 @@ extract_integer (gdb::array_view<const gdb_byte> buf, enum bfd_endian byte_order
 	  retval = ((LONGEST) buf[i] ^ 0x80) - 0x80;
 	  ++i;
 	}
-      for (; i < buf.size (); ++i)
+      for (; i < len; ++i)
 	retval = (retval << 8) | buf[i];
     }
   else
     {
-      ssize_t i = buf.size () - 1;
+      ssize_t i = len - 1;
 
       if (std::is_signed<T>::value)
 	{
