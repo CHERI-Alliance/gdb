@@ -208,6 +208,8 @@ enum target_object
   TARGET_OBJECT_FREEBSD_VMMAP,
   /* FreeBSD process strings.  */
   TARGET_OBJECT_FREEBSD_PS_STRINGS,
+  /* CHERI capabilities.  */
+  TARGET_OBJECT_CAPABILITY,
   /* Possible future objects: TARGET_OBJECT_FILE, ...  */
 };
 
@@ -1399,6 +1401,10 @@ struct target_ops
     virtual void displaced_step_restore_all_in_ptid (inferior *parent_inf,
 						     ptid_t child_ptid)
       TARGET_DEFAULT_FUNC (default_displaced_step_restore_all_in_ptid);
+
+    /* Read a capability from ADDR.  */
+    virtual gdb::byte_vector read_capability (CORE_ADDR addr)
+      TARGET_DEFAULT_NORETURN (tcomplain ());
   };
 
 /* Deleter for std::unique_ptr.  See comments in
@@ -2659,5 +2665,11 @@ extern void target_prepare_to_generate_core (void);
 
 /* See to_done_generating_core.  */
 extern void target_done_generating_core (void);
+
+/* See read_capability.  */
+extern gdb::byte_vector target_read_capability (CORE_ADDR addr);
+
+/* See read_capability.  */
+extern gdb::byte_vector target_read_capability (CORE_ADDR addr);
 
 #endif /* GDB_TARGET_H */

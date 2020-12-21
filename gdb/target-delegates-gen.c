@@ -203,6 +203,7 @@ struct dummy_target : public target_ops
   displaced_step_prepare_status displaced_step_prepare (thread_info *arg0, CORE_ADDR &arg1) override;
   displaced_step_finish_status displaced_step_finish (thread_info *arg0, const target_waitstatus &arg1) override;
   void displaced_step_restore_all_in_ptid (inferior *arg0, ptid_t arg1) override;
+  gdb::byte_vector read_capability (CORE_ADDR arg0) override;
 };
 
 struct debug_target : public target_ops
@@ -384,6 +385,7 @@ struct debug_target : public target_ops
   displaced_step_prepare_status displaced_step_prepare (thread_info *arg0, CORE_ADDR &arg1) override;
   displaced_step_finish_status displaced_step_finish (thread_info *arg0, const target_waitstatus &arg1) override;
   void displaced_step_restore_all_in_ptid (inferior *arg0, ptid_t arg1) override;
+  gdb::byte_vector read_capability (CORE_ADDR arg0) override;
 };
 
 void
@@ -4518,4 +4520,29 @@ debug_target::displaced_step_restore_all_in_ptid (inferior *arg0, ptid_t arg1)
 	      this->beneath ()->shortname (),
 	      target_debug_print_inferior_p (arg0).c_str (),
 	      target_debug_print_ptid_t (arg1).c_str ());
+}
+
+gdb::byte_vector
+target_ops::read_capability (CORE_ADDR arg0)
+{
+  return this->beneath ()->read_capability (arg0);
+}
+
+gdb::byte_vector
+dummy_target::read_capability (CORE_ADDR arg0)
+{
+  tcomplain ();
+}
+
+gdb::byte_vector
+debug_target::read_capability (CORE_ADDR arg0)
+{
+  target_debug_printf_nofunc ("-> %s->read_capability (...)", this->beneath ()->shortname ());
+  gdb::byte_vector result
+    = this->beneath ()->read_capability (arg0);
+  target_debug_printf_nofunc ("<- %s->read_capability (%s) = %s",
+	      this->beneath ()->shortname (),
+	      target_debug_print_CORE_ADDR (arg0).c_str (),
+	      target_debug_print_gdb_byte_vector (result).c_str ());
+  return result;
 }

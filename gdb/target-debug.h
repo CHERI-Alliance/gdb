@@ -366,6 +366,10 @@ static std::string
 target_debug_print_gdb_byte_vector_r (gdb::byte_vector &vector)
 { return target_debug_print_const_gdb_byte_vector_r (vector); }
 
+static std::string                                                                                      
+target_debug_print_gdb_byte_vector (gdb::byte_vector vector)                                            
+{ return target_debug_print_gdb_byte_vector_r (vector); }      
+
 static std::string
 target_debug_print_x86_xsave_layout (const x86_xsave_layout &layout)
 {

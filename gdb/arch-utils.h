@@ -429,4 +429,8 @@ extern bool default_register_tag (struct gdbarch *gdbarch,
 				  readable_regcache *regcache,
 				  int cookednum);
 
+/* Default implementation of gdbarch_cap_tag_from_address.  */
+extern bool default_get_cap_tag_from_address (struct gdbarch *gdbarch,
+					      CORE_ADDR addr);
+
 #endif /* GDB_ARCH_UTILS_H */

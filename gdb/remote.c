@@ -402,6 +402,9 @@ enum {
      errors, and so they should not need to check for this feature.  */
   PACKET_accept_error_message,
 
+  /* Support for the qXfer:capa:read packet.  */
+  PACKET_qXfer_capability,
+
   PACKET_MAX
 };
 
@@ -1157,6 +1160,8 @@ public:
 		      const gdb::byte_vector &tags, int type) override;
 
   bool is_address_tagged (gdbarch *gdbarch, CORE_ADDR address) override;
+
+  gdb::byte_vector read_capability (CORE_ADDR addr) override;
 
 public: /* Remote specific methods.  */
 
@@ -11830,6 +11835,17 @@ remote_target::xfer_partial (enum target_object object,
 	return TARGET_XFER_E_IO;
     }
 
+  /* Read CHERI capabilities.  */
+  if (object == TARGET_OBJECT_CAPABILITY)
+    {
+      if (readbuf)
+	return remote_read_qxfer ("capa", annex,
+				  readbuf, offset, len, xfered_len,
+				  PACKET_qXfer_capability);
+      else
+	return TARGET_XFER_E_IO;
+    }
+
   /* Only handle flash writes.  */
   if (writebuf != NULL)
     {
@@ -16176,6 +16192,27 @@ test_packet_check_result ()
 } /* namespace selftests */
 #endif /* GDB_SELF_TEST */
 
+/* Implementation of the read_capability method.  */
+
+gdb::byte_vector
+remote_target::read_capability (CORE_ADDR addr)
+{
+  std::optional<gdb::byte_vector> cap;
+  gdb::byte_vector cap_vec;
+
+  std::string addr_str = string_printf ("%s", phex_nz (addr, 0));
+
+  cap = target_read_alloc (current_inferior ()->top_target (),
+			   TARGET_OBJECT_CAPABILITY, addr_str.c_str ());
+
+  if (cap.has_value ())
+    cap_vec = *cap;
+  else
+    perror_with_name (_("Unable to read capability from address."));
+
+  return cap_vec;
+}
+
 INIT_GDB_FILE (remote)
 {
   add_target (remote_target_info, remote_target::open);
@@ -16553,6 +16590,9 @@ Show the maximum size of the address (in bits) in a memory packet."), NULL,
 
   add_packet_config_cmd (PACKET_accept_error_message,
 			 "error-message", "error-message", 0);
+
+  add_packet_config_cmd (PACKET_qXfer_capability,
+			 "qXfer:capa:read", "read-capability", 0);
 
   /* Assert that we've registered "set remote foo-packet" commands
      for all packet configs.  */
