@@ -4565,13 +4565,6 @@ aarch64_cannot_store_register (struct gdbarch *gdbarch, int regnum)
 	return 1;
     }
 
-  if (tdep->has_capability ())
-    {
-      /* Capability register set is read-only for now.  */
-      if (regnum >= tdep->cap_reg_base && regnum < tdep->cap_reg_last)
-	return 1;
-    }
-
   return 0;
 }
 
