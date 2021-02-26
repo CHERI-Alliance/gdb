@@ -3025,7 +3025,7 @@ i386_reg_struct_return_p (struct gdbarch *gdbarch, struct type *type)
 static enum return_value_convention
 i386_return_value (struct gdbarch *gdbarch, struct value *function,
 		   struct type *type, struct regcache *regcache,
-		   struct value **read_value, const gdb_byte *writebuf)
+		   struct value **read_value, struct value *write_value)
 {
   enum type_code code = type->code ();
 
@@ -3079,7 +3079,7 @@ i386_return_value (struct gdbarch *gdbarch, struct value *function,
       struct type *inner_type = check_typedef (type->field (0).type ());
       enum return_value_convention result
 	= i386_return_value (gdbarch, function, inner_type, regcache,
-			     read_value, writebuf);
+			     read_value, write_value);
       if (read_value != nullptr)
 	(*read_value)->deprecated_set_type (type);
       return result;
@@ -3091,8 +3091,9 @@ i386_return_value (struct gdbarch *gdbarch, struct value *function,
       i386_extract_return_value (gdbarch, type, regcache,
 				 (*read_value)->contents_raw ().data ());
     }
-  if (writebuf)
-    i386_store_return_value (gdbarch, type, regcache, writebuf);
+  if (write_value != nullptr)
+    i386_store_return_value (gdbarch, type, regcache,
+			     write_value->contents ().data ());
 
   return RETURN_VALUE_REGISTER_CONVENTION;
 }

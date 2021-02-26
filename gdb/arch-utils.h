@@ -412,7 +412,7 @@ extern bool default_dwarf2_omit_typedef_p (struct type *target_type,
 extern enum return_value_convention default_gdbarch_return_value
      (struct gdbarch *gdbarch, struct value *function, struct type *valtype,
       struct regcache *regcache, struct value **read_value,
-      const gdb_byte *writebuf);
+      struct value *write_value);
 
 /* Default implementation of gdbarch default_get_shadow_stack_pointer
    method.  */
