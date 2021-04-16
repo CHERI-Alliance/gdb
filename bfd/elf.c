@@ -65,6 +65,7 @@ SECTION
 #define NOTE_PSEUDO_SECTION_AARCH_HW_BREAK	".reg-aarch-hw-break"
 #define NOTE_PSEUDO_SECTION_AARCH_HW_WATCH	".reg-aarch-hw-watch"
 #define NOTE_PSEUDO_SECTION_AARCH_MTE		".reg-aarch-mte"
+#define NOTE_PSEUDO_SECTION_AARCH_MORELLO	".reg-aarch-morello"
 #define NOTE_PSEUDO_SECTION_AARCH_PAUTH		".reg-aarch-pauth"
 #define NOTE_PSEUDO_SECTION_AARCH_SSVE		".reg-aarch-ssve"
 #define NOTE_PSEUDO_SECTION_AARCH_SVE		".reg-aarch-sve"
@@ -10733,6 +10734,12 @@ elfcore_grok_aarch_gcs (bfd *abfd, Elf_Internal_Note *note)
 }
 
 static bool
+elfcore_grok_aarch_morello (bfd *abfd, Elf_Internal_Note *note)
+{
+  return elfcore_make_note_pseudosection (abfd, NOTE_PSEUDO_SECTION_AARCH_MORELLO, note);
+}
+
+static bool
 elfcore_grok_arc_v2 (bfd *abfd, Elf_Internal_Note *note)
 {
   return elfcore_make_note_pseudosection (abfd, NOTE_PSEUDO_SECTION_ARC_V2, note);
@@ -11255,6 +11262,13 @@ elfcore_grok_note (bfd *abfd, Elf_Internal_Note *note)
     case NT_RISCV_CSR:
       if (note->namesz == 4 && streq (note->namedata, NOTE_NAME_GDB))
 	return elfcore_grok_riscv_csr (abfd, note);
+      else
+	return true;
+
+    case NT_ARM_MORELLO:
+      if (note->namesz == 6
+	  && strcmp (note->namedata, NOTE_NAME_LINUX) == 0)
+	return elfcore_grok_aarch_morello (abfd, note);
       else
 	return true;
 
@@ -12879,6 +12893,17 @@ elfcore_write_aarch_gcs (bfd *abfd, char *buf, int *bufsiz,
 }
 
 char *
+elfcore_write_aarch_morello (bfd *abfd,
+			     char *buf,
+			     int *bufsiz,
+			     const void *aarch_morello,
+			     int size)
+{
+  return elfcore_write_note (abfd, buf, bufsiz,
+			     NOTE_NAME_LINUX, NT_ARM_MORELLO, aarch_morello, size);
+}
+
+char *
 elfcore_write_arc_v2 (bfd *abfd,
 		      char *buf,
 		      int *bufsiz,
@@ -12988,6 +13013,7 @@ elfcore_write_register_note (bfd *abfd,
       { NOTE_PSEUDO_SECTION_AARCH_HW_BREAK,   elfcore_write_aarch_hw_break},
       { NOTE_PSEUDO_SECTION_AARCH_HW_WATCH,   elfcore_write_aarch_hw_watch},
       { NOTE_PSEUDO_SECTION_AARCH_MTE,        elfcore_write_aarch_mte},
+	  { NOTE_PSEUDO_SECTION_AARCH_MORELLO,    elfcore_write_aarch_morello},
       { NOTE_PSEUDO_SECTION_AARCH_PAUTH,      elfcore_write_aarch_pauth},
       { NOTE_PSEUDO_SECTION_AARCH_SSVE,       elfcore_write_aarch_ssve},
       { NOTE_PSEUDO_SECTION_AARCH_SVE,        elfcore_write_aarch_sve},
