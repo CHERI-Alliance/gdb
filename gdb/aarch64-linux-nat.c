@@ -1449,14 +1449,6 @@ INIT_GDB_FILE (aarch64_linux_nat)
 {
   aarch64_initialize_hw_point ();
 
-  add_cmd ("cap_from_addr", class_maintenance, maint_print_cap_from_addr_cmd, _("\
-Print the capability from addr."),
-	   &maintenanceprintlist);
-
-  add_cmd ("cap_in_memory", class_maintenance,
-	   maint_set_capability_in_memory_cmd,
-	   _("Print the capability from addr."), &maintenancelist);
-
   /* Register the target.  */
   linux_target = &the_aarch64_linux_nat_target;
   add_inf_child_target (&the_aarch64_linux_nat_target);
