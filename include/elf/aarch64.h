@@ -55,6 +55,9 @@
 #define DT_AARCH64_MEMTAG_MODE	(DT_LOPROC + 9)
 #define DT_AARCH64_MEMTAG_STACK (DT_LOPROC + 12)
 
+/* AArch64-specific e_flags entries.  */
+#define EF_AARCH64_CHERI_PURECAP 0x00010000
+
 /* AArch64-specific values for st_other.  */
 #define STO_AARCH64_VARIANT_PCS	0x80  /* Symbol may follow different call
 					 convention from the base PCS.  */
