@@ -226,6 +226,8 @@ extern solib_ops_up make_svr4_ilp32_solib_ops (program_space *pspace);
 
 extern solib_ops_up make_svr4_lp64_solib_ops (program_space *pspace);
 
+extern struct link_map_offsets *svr4_lp64_cheri_fetch_link_map_offsets (void);
+
 /* For the MUSL C library, given link map address LM_ADDR, return the
    corresponding TLS module id, or 0 if not found.  */
 int musl_link_map_to_tls_module_id (CORE_ADDR lm_addr);
