@@ -4927,7 +4927,7 @@ exponent (uint64_t len)
 #undef CAP_MAX_EXPONENT
 }
 
-#define ONES(x)         ((1ULL << ((x) + 1)) - 1)
+#define ONES(x)         ((1ULL << (x)) - 1)
 #define ALIGN_UP(x, a)  (((x) + ONES (a)) & (~ONES (a)))
 
 static bool
