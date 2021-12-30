@@ -1556,10 +1556,7 @@ aarch64_prologue_prev_register (const frame_info_ptr &this_frame,
 
       /* Copy the capability tag over, if it exists.  */
       if (prev_regnum == tdep->cap_reg_pcc && lr_value->tagged ())
-	{
-	  lr_value_adjusted->set_tagged (true);
-	  lr_value_adjusted->set_tag (lr_value->tag ());
-	}
+	lr_value_adjusted->set_tag (lr_value->tag ());
 
       return lr_value_adjusted;
     }
@@ -1757,10 +1754,7 @@ aarch64_dwarf2_prev_register (const frame_info_ptr &this_frame,
 
       /* Copy the capability tag over, if it exists.  */
       if (regnum == tdep->cap_reg_pcc && lr_value->tagged ())
-	{
-	  lr_value_adjusted->set_tagged (true);
-	  lr_value_adjusted->set_tag (lr_value->tag ());
-	}
+	lr_value_adjusted->set_tag (lr_value->tag ());
 
       return lr_value_adjusted;
     }
@@ -3890,7 +3884,6 @@ morello_extract_return_value (struct value *value, struct regcache *regs,
       if (aapcs64_cap)
 	{
 	  regno = tdep->cap_reg_base + AARCH64_X0_REGNUM;
-	  value->set_tagged (true);
 	  value->set_tag (true);
 	}
       else
