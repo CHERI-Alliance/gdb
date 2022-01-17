@@ -434,6 +434,7 @@ if [check_shared_lib_support] {
 }
 
 run_dump_test "weak-tls"
+run_dump_test "morello-weak-tls"
 run_dump_test "undef-tls"
 
 if { [supports_dt_relr] } {
