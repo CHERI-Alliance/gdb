@@ -11140,6 +11140,23 @@ elfNN_aarch64_late_size_sections (bfd *output_bfd ATTRIBUTE_UNUSED,
 		 elfNN_aarch64_allocate_local_ifunc_dynrelocs,
 		 info);
 
+  if (bfd_link_executable (info)
+      && !bfd_link_pic (info)
+      && htab->srelcaps
+      && htab->srelcaps->size > 0)
+    {
+      struct elf_link_hash_entry *h;
+
+      h = _bfd_elf_define_linkage_sym (output_bfd, info,
+				       htab->srelcaps,
+				       "__rela_dyn_start");
+      h = _bfd_elf_define_linkage_sym (output_bfd, info,
+				       htab->srelcaps,
+				       "__rela_dyn_end");
+
+      h->root.u.def.value = htab->srelcaps->vma + htab->srelcaps->size;
+    }
+
   /* For every jump slot reserved in the sgotplt, reloc_count is
      incremented.  However, when we reserve space for TLS descriptors,
      it's not incremented, so in order to compute the space reserved
@@ -11521,25 +11538,6 @@ elfNN_aarch64_early_size_sections (bfd *output_bfd,
 
   if (bfd_link_relocatable (info))
     return true;
-
-  struct elf_aarch64_link_hash_table *htab = elf_aarch64_hash_table (info);
-
-  if (bfd_link_executable (info)
-      && !bfd_link_pic (info)
-      && htab->srelcaps
-      && htab->srelcaps->size > 0)
-    {
-      struct elf_link_hash_entry *h;
-
-      h = _bfd_elf_define_linkage_sym (output_bfd, info,
-				       htab->srelcaps,
-				       "__cap_dynrelocs_start");
-      h = _bfd_elf_define_linkage_sym (output_bfd, info,
-				       htab->srelcaps,
-				       "__cap_dynrelocs_end");
-
-      h->root.u.def.value = htab->srelcaps->vma + htab->srelcaps->size;
-    }
 
   tls_sec = elf_hash_table (info)->tls_sec;
 
