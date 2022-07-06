@@ -1838,23 +1838,3 @@ extern void set_gdbarch_shadow_stack_push (struct gdbarch *gdbarch, gdbarch_shad
 typedef std::optional<CORE_ADDR> (gdbarch_get_shadow_stack_pointer_ftype) (struct gdbarch *gdbarch, regcache *regcache, bool &shadow_stack_enabled);
 extern std::optional<CORE_ADDR> gdbarch_get_shadow_stack_pointer (struct gdbarch *gdbarch, regcache *regcache, bool &shadow_stack_enabled);
 extern void set_gdbarch_get_shadow_stack_pointer (struct gdbarch *gdbarch, gdbarch_get_shadow_stack_pointer_ftype *get_shadow_stack_pointer);
-
-/* Returns true if register COOKEDNUM has a tag and false otherwise.
-   The default is to always return false. */
-
-typedef bool (gdbarch_register_has_tag_ftype) (struct gdbarch *gdbarch, readable_regcache *regcache, int cookednum);
-extern bool gdbarch_register_has_tag (struct gdbarch *gdbarch, readable_regcache *regcache, int cookednum);
-extern void set_gdbarch_register_has_tag (struct gdbarch *gdbarch, gdbarch_register_has_tag_ftype *register_has_tag);
-
-/* Returns true if the register tag bit is 1 and false otherwise.
-   The default is to always return false. */
-
-typedef bool (gdbarch_register_tag_ftype) (struct gdbarch *gdbarch, readable_regcache *regcache, int cookednum);
-extern bool gdbarch_register_tag (struct gdbarch *gdbarch, readable_regcache *regcache, int cookednum);
-extern void set_gdbarch_register_tag (struct gdbarch *gdbarch, gdbarch_register_tag_ftype *register_tag);
-
-/* Sets the register tag to TAG. */
-
-typedef void (gdbarch_register_set_tag_ftype) (struct gdbarch *gdbarch, regcache *regcache, int cookednum, bool tag);
-extern void gdbarch_register_set_tag (struct gdbarch *gdbarch, regcache *regcache, int cookednum, bool tag);
-extern void set_gdbarch_register_set_tag (struct gdbarch *gdbarch, gdbarch_register_set_tag_ftype *register_set_tag);
