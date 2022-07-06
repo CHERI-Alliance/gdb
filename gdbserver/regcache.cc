@@ -277,6 +277,12 @@ register_size (const struct target_desc *tdesc, int n)
   return find_register_by_number (tdesc, n).size / 8;
 }
 
+bool
+register_tagged (const struct target_desc *tdesc, int n)
+{
+  return find_register_by_number (tdesc, n).tagged;
+}
+
 /* See gdbsupport/common-regcache.h.  */
 
 int
@@ -290,7 +296,16 @@ register_data (const struct regcache *regcache, int n)
 {
   const gdb::reg &reg = find_register_by_number (regcache->tdesc, n);
   return gdb::make_array_view (regcache->registers + reg.offset / 8,
-			       reg.size / 8);
+			       reg.size / 8 - (reg.tagged ? 1 : 0));
+}
+
+static gdb::array_view<gdb_byte>
+register_tag (const struct regcache *regcache, int n)
+{
+  const gdb::reg &reg = find_register_by_number (regcache->tdesc, n);
+  gdb_assert (reg.tagged);
+  return gdb::make_array_view (regcache->registers
+			       + (reg.offset + reg.size) / 8 - 1, 1);
 }
 
 void
@@ -324,6 +339,15 @@ regcache::raw_supply (int n, gdb::array_view<const gdb_byte> src)
     }
 }
 
+/* See gdbsupport/common-regcache.h.  */
+
+void
+regcache::raw_supply_tag (int n, bool tag)
+{
+  auto dst = register_tag (this, n);
+  dst[0] = tag;
+}
+
 /* Supply register N with value zero to REGCACHE.  */
 
 void
@@ -331,6 +355,11 @@ supply_register_zeroed (struct regcache *regcache, int n)
 {
   auto dst = register_data (regcache, n);
   memset (dst.data (), 0, dst.size ());
+  if (register_tagged (regcache->tdesc, n))
+    {
+      auto tag = register_tag (regcache, n);
+      tag[0] = 0;
+    }
 #ifndef IN_PROCESS_AGENT
   regcache->set_register_status (n, REG_VALID);
 #endif
@@ -401,6 +430,15 @@ regcache::raw_collect (int n, gdb::array_view<gdb_byte> dst) const
 {
   auto src = register_data (this, n);
   copy (src, dst);
+}
+
+/* See gdbsupport/common-regcache.h.  */
+
+bool
+regcache::raw_collect_tag (int n) const
+{
+  auto tag = register_tag (this, n);
+  return tag[0];
 }
 
 enum register_status

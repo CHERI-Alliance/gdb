@@ -81,7 +81,13 @@ struct regcache : public reg_buffer_common
   void raw_supply_part_zeroed (int regnum, int offset, size_t size) override;
 
   /* See gdbsupport/common-regcache.h.  */
+  void raw_supply_tag (int regnum, bool tag) override;
+
+  /* See gdbsupport/common-regcache.h.  */
   void raw_collect (int regnum, gdb::array_view<gdb_byte> dst) const override;
+
+  /* See gdbsupport/common-regcache.h.  */
+  bool raw_collect_tag (int regnum) const override;
 
   /* See gdbsupport/common-regcache.h.  */
   bool raw_compare (int regnum, const void *buf, int offset) const override;
@@ -133,6 +139,8 @@ void regcache_write_pc (struct regcache *regcache, CORE_ADDR pc);
 int register_cache_size (const struct target_desc *tdesc);
 
 int register_size (const struct target_desc *tdesc, int n);
+
+bool register_tagged (const struct target_desc *tdesc, int n);
 
 /* No throw version of find_regno.  If NAME is not a known register, return
    an empty value.  */
