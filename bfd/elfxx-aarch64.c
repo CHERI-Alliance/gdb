@@ -267,6 +267,7 @@ _bfd_aarch64_elf_put_addend (bfd *abfd,
     case BFD_RELOC_MORELLO_TLSDESC_CALL:
       break;
 
+    case BFD_RELOC_MORELLO_TLSIE_ADR_GOTTPREL_PAGE20:
     case BFD_RELOC_MORELLO_ADR_GOT_PAGE:
     case BFD_RELOC_MORELLO_ADR_HI20_NC_PCREL:
     case BFD_RELOC_MORELLO_ADR_HI20_PCREL:
@@ -288,6 +289,7 @@ _bfd_aarch64_elf_put_addend (bfd *abfd,
       contents = _bfd_aarch64_reencode_adr_imm (contents, addend, 0);
       break;
 
+    case BFD_RELOC_MORELLO_TLSIE_ADD_LO12:
     case BFD_RELOC_AARCH64_ADD_LO12:
     case BFD_RELOC_AARCH64_TLSDESC_ADD_LO12:
     case BFD_RELOC_AARCH64_TLSGD_ADD_LO12_NC:
@@ -379,6 +381,13 @@ _bfd_aarch64_elf_put_addend (bfd *abfd,
       /* Group relocations to create a 16, 32, 48 or 64 bit unsigned
 	 data or abs address inline.  */
 
+    case BFD_RELOC_MORELLO_MOVW_SIZE_G0:
+    case BFD_RELOC_MORELLO_MOVW_SIZE_G0_NC:
+    case BFD_RELOC_MORELLO_MOVW_SIZE_G1:
+    case BFD_RELOC_MORELLO_MOVW_SIZE_G1_NC:
+    case BFD_RELOC_MORELLO_MOVW_SIZE_G2:
+    case BFD_RELOC_MORELLO_MOVW_SIZE_G2_NC:
+    case BFD_RELOC_MORELLO_MOVW_SIZE_G3:
     case BFD_RELOC_AARCH64_MOVW_G0:
     case BFD_RELOC_AARCH64_MOVW_G0_NC:
     case BFD_RELOC_AARCH64_MOVW_G1:
@@ -549,6 +558,7 @@ _bfd_aarch64_elf_resolve_relocation (bfd *input_bfd,
 
     case BFD_RELOC_MORELLO_ADR_GOT_PAGE:
     case BFD_RELOC_MORELLO_TLSDESC_ADR_PAGE20:
+    case BFD_RELOC_MORELLO_TLSIE_ADR_GOTTPREL_PAGE20:
     case BFD_RELOC_AARCH64_ADR_GOT_PAGE:
     case BFD_RELOC_AARCH64_TLSDESC_ADR_PAGE21:
     case BFD_RELOC_AARCH64_TLSGD_ADR_PAGE21:
@@ -568,6 +578,7 @@ _bfd_aarch64_elf_resolve_relocation (bfd *input_bfd,
       value = value - addend;
       break;
 
+    case BFD_RELOC_MORELLO_TLSIE_ADD_LO12:
     case BFD_RELOC_AARCH64_ADD_LO12:
     case BFD_RELOC_AARCH64_LD32_GOT_LO12_NC:
     case BFD_RELOC_AARCH64_LD64_GOT_LO12_NC:
