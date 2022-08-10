@@ -771,8 +771,11 @@ c_language_arch_info (struct gdbarch *gdbarch,
   add (builtin->builtin_decfloat);
   add (builtin->builtin_decdouble);
   add (builtin->builtin_declong);
-  add (builtin->builtin_intcap_t);
-  add (builtin->builtin_uintcap_t);
+  if (gdbarch_capability_bit (gdbarch) != 0)
+    {
+      add (builtin->builtin_intcap_t);
+      add (builtin->builtin_uintcap_t);
+    }
 
   lai->set_string_char_type (builtin->builtin_char);
   lai->set_bool_type (builtin->builtin_int);
@@ -919,8 +922,11 @@ public:
     add (builtin->builtin_char16);
     add (builtin->builtin_char32);
     add (builtin->builtin_wchar);
-    add (builtin->builtin_intcap_t);
-    add (builtin->builtin_uintcap_t);
+    if (gdbarch_capability_bit (gdbarch) != 0)
+      {
+	add (builtin->builtin_intcap_t);
+	add (builtin->builtin_uintcap_t);
+      }
 
     lai->set_string_char_type (builtin->builtin_char);
     lai->set_bool_type (builtin->builtin_bool, "bool");
