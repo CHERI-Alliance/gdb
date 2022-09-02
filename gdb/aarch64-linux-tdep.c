@@ -3092,91 +3092,6 @@ aarch64_use_target_description_from_corefile_notes (gdbarch *gdbarch,
   return true;
 }
 
-/* Fetch and return the TLS DTV (dynamic thread vector) address for PTID.
-   Throw a suitable TLS error if something goes wrong.  */
-
-static CORE_ADDR
-aarch64_linux_get_tls_dtv_addr (struct gdbarch *gdbarch, ptid_t ptid,
-				svr4_tls_libc libc)
-{
-  /* On aarch64, the thread pointer is found in the TPIDR register.
-     Note that this is the first register in the TLS feature - see
-     features/aarch64-tls.c - and it will always be present.  */
-  regcache *regcache
-    = get_thread_arch_regcache (current_inferior (), ptid, gdbarch);
-  aarch64_gdbarch_tdep *tdep = gdbarch_tdep<aarch64_gdbarch_tdep> (gdbarch);
-  target_fetch_registers (regcache, tdep->tls_regnum_base);
-  ULONGEST thr_ptr;
-  if (regcache->cooked_read (tdep->tls_regnum_base, &thr_ptr) != REG_VALID)
-    throw_error (TLS_GENERIC_ERROR, _("Unable to fetch thread pointer"));
-
-  CORE_ADDR dtv_ptr_addr;
-  switch (libc)
-    {
-    case svr4_tls_libc_musl:
-      /* MUSL: The DTV pointer is found at the very end of the pthread
-	 struct which is located *before* the thread pointer.  I.e.
-	 the thread pointer will be just beyond the end of the struct,
-	 so the address of the DTV pointer is found one pointer-size
-	 before the thread pointer.  */
-      dtv_ptr_addr = thr_ptr - (gdbarch_ptr_bit (gdbarch) / TARGET_CHAR_BIT);
-      break;
-    case svr4_tls_libc_glibc:
-      /* GLIBC: The thread pointer (tpidr) points at the TCB (thread control
-	 block).  On aarch64, this struct (tcbhead_t) is defined to
-	 contain two pointers.  The first is a pointer to the DTV and
-	 the second is a pointer to private data.  So the DTV pointer
-	 address is the same as the thread pointer.  */
-      dtv_ptr_addr = thr_ptr;
-      break;
-    default:
-      throw_error (TLS_GENERIC_ERROR, _("Unknown aarch64 C library"));
-      break;
-    }
-  gdb::byte_vector buf (gdbarch_ptr_bit (gdbarch) / TARGET_CHAR_BIT);
-  if (target_read_memory (dtv_ptr_addr, buf.data (), buf.size ()) != 0)
-    throw_error (TLS_GENERIC_ERROR, _("Unable to fetch DTV address"));
-
-  const struct builtin_type *builtin = builtin_type (gdbarch);
-  CORE_ADDR dtv_addr = gdbarch_pointer_to_address
-			 (gdbarch, builtin->builtin_data_ptr, buf.data ());
-  return dtv_addr;
-}
-
-/* AArch64 Linux implementation of the get_cap_tag_from_address gdbarch
-   hook.  Returns the tag from the capability located at ADDR.  */
-
-static bool
-aarch64_linux_get_cap_tag_from_address (struct gdbarch *gdbarch, CORE_ADDR addr)
-{
-  gdb::byte_vector cap;
-
-  cap = target_read_capability (addr);
-
-  if (cap.size () == 0)
-    return false;
-
-  return cap[0] != 0;
-}
-
-/* AArch64 Linux implementation of the set_cap_tag_from_address gdbarch
-   hook.  Sets the tag from the capability located at ADDR to TAG.  */
-
-static void
-aarch64_linux_set_cap_tag_from_address (struct gdbarch *gdbarch, CORE_ADDR addr,
-					bool tag)
-{
-  gdb::byte_vector cap;
-
-  /* Read original capability at ADDR.  */
-  cap = target_read_capability (addr);
-
-  cap[0] = tag? 1 : 0;
-
-  /* Write back the same contents but with a custom tag.  */
-  target_write_capability (addr, cap);
-}
-
 /* Implement the maintenance print capability tag command.  */
 
 static void
@@ -3619,10 +3534,6 @@ aarch64_linux_init_abi (struct gdbarch_info info, struct gdbarch *gdbarch)
 
       set_gdbarch_report_signal_info (gdbarch,
 				      aarch64_linux_report_signal_info);
-      set_gdbarch_get_cap_tag_from_address (gdbarch,
-					    aarch64_linux_get_cap_tag_from_address);
-      set_gdbarch_set_cap_tag_from_address (gdbarch,
-					    aarch64_linux_set_cap_tag_from_address);
 
       add_cmd ("cap_from_addr", class_maintenance,
 	       maint_print_cap_from_addr_cmd,

@@ -419,14 +419,6 @@ extern enum return_value_convention default_gdbarch_return_value
 extern std::optional<CORE_ADDR> default_get_shadow_stack_pointer
   (gdbarch *gdbarch, regcache *regcache, bool &shadow_stack_enabled);
 
-/* Default implementation of gdbarch_cap_tag_from_address.  */
-extern bool default_get_cap_tag_from_address (struct gdbarch *gdbarch,
-					      CORE_ADDR addr);
-
-/* Default implementation of gdbarch_set_cap_tag_from_address.  */
-extern void default_set_cap_tag_from_address (struct gdbarch *gdbarch,
-					      CORE_ADDR addr, bool tag);
-
 /* Default implementation of gdbarch_print_cap_attributes.  */
 extern void default_print_cap (struct gdbarch *gdbarch,
 			       const gdb_byte *contents, bool tag, bool compact,
