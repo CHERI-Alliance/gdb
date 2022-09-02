@@ -1517,7 +1517,8 @@ linux_core_file_address_in_memtag_page (CORE_ADDR address)
 
   memtag_section_info info;
   return get_next_core_memtag_section (current_program_space->core_bfd (),
-				       nullptr, address, info);
+				       "memtag", nullptr, address,
+				       info);
 }
 
 /* See linux-tdep.h.  */
