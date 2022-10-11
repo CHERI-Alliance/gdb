@@ -67,6 +67,7 @@ struct riscv_private_data
   /* Register names as used by the disassembler.  */
   const char (*riscv_gpr_names)[NRC];
   const char (*riscv_fpr_names)[NRC];
+  const char (*riscv_gpcr_names)[NRC];
   /* If set, disassemble as most general instruction.  */
   bool no_aliases;
   /* If set, disassemble without checking architecture string, just like what
@@ -82,6 +83,7 @@ set_default_riscv_dis_options (struct disassemble_info *info)
   struct riscv_private_data *pd = info->private_data;
   pd->riscv_gpr_names = riscv_gpr_names_abi;
   pd->riscv_fpr_names = riscv_fpr_names_abi;
+  pd->riscv_gpcr_names = riscv_gpcr_names_abi;
   pd->no_aliases = false;
   pd->all_ext = false;
 }
@@ -99,6 +101,7 @@ parse_riscv_dis_option_without_args (const char *option,
     {
       pd->riscv_gpr_names = riscv_gpr_names_numeric;
       pd->riscv_fpr_names = riscv_fpr_names_numeric;
+      pd->riscv_gpcr_names = riscv_gpcr_names_numeric;
     }
   else if (strcmp (option, "max") == 0)
     pd->all_ext = true;
@@ -659,6 +662,7 @@ print_insn_args (const char *oparg, insn_t l, bfd_vma pc, disassemble_info *info
 		DECLARE_CSR (name, num, class, define_version, abort_version)
 #include "opcode/riscv-opc.h"
 #undef DECLARE_CSR
+#undef DECLARE_CSR_ALIAS
 	      }
 
 	    if (riscv_csr_hash[csr] != NULL)
@@ -760,6 +764,63 @@ print_insn_args (const char *oparg, insn_t l, bfd_vma pc, disassemble_info *info
 	case 'X': /* Vendor-specific operands.  */
 	  switch (*++oparg)
 	    {
+	    case 'C': /* CHERI */
+	      switch (*++oparg)
+		{
+		case 's':
+		  print (info->stream, dis_style_register, "%s",
+			 pd->riscv_gpcr_names[rs1]);
+		  break;
+		case 't':
+		  print (info->stream, dis_style_register, "%s",
+			 pd->riscv_gpcr_names[EXTRACT_OPERAND (RS2, l)]);
+		  break;
+		case 'd':
+		  print (info->stream, dis_style_register, "%s",
+			 pd->riscv_gpcr_names[rd]);
+		  break;
+		case 'D': /* 0 means DDC */
+		  {
+		    const char *reg_name = NULL;
+		    unsigned int reg = 0;
+		    switch (*++oparg)
+		      {
+		      case 's':
+			reg = rs1;
+			break;
+		      case 't':
+			reg = EXTRACT_OPERAND (RS2, l);
+			break;
+		      }
+		    if (reg == 0)
+		      reg_name = "ddc";
+		    else
+		      reg_name = pd->riscv_gpcr_names[reg];
+		    print (info->stream, dis_style_register, "%s", reg_name);
+		    break;
+		  }
+		case 'E':
+		  {
+		    const char* scr_name = NULL;
+		    unsigned int scr = EXTRACT_OPERAND (SCR, l);
+		    switch (scr)
+		      {
+#define DECLARE_CHERI_SCR(name, num) case num: scr_name = #name; break;
+#include "opcode/riscv-opc.h"
+#undef DECLARE_CHERI_SCR
+		      }
+		    if (scr_name)
+		      print (info->stream, dis_style_register, "%s", scr_name);
+		    else
+		      print (info->stream, dis_style_immediate, "0x%x", scr);
+		    break;
+		  }
+		case 'I':
+		  print (info->stream, dis_style_immediate, "0x%x",
+			 (int) EXTRACT_OPERAND (IMM16, l) & 0xffff);
+		  break;
+		}
+	      break;
 	    case 't': /* Vendor-specific (T-head) operands.  */
 	      {
 		size_t n;
