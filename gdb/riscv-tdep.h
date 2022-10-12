@@ -216,4 +216,8 @@ extern int riscv_process_record (struct gdbarch *gdbarch,
 /* The names of the RISC-V target description features.  */
 extern const char *riscv_feature_name_csr;
 
+extern struct riscv_gdbarch_features riscv_features_from_bfd (const bfd *abfd);
+
+extern struct riscv_gdbarch_features riscv_features_from_bfd (const bfd *abfd);
+
 #endif /* GDB_RISCV_TDEP_H */
