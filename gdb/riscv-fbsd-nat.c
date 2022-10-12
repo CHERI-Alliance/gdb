@@ -18,6 +18,7 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #include "regcache.h"
+#include "inferior.h"
 #include "target.h"
 
 #include <sys/types.h>
@@ -33,6 +34,9 @@ struct riscv_fbsd_nat_target final : public fbsd_nat_target
 {
   void fetch_registers (struct regcache *, int) override;
   void store_registers (struct regcache *, int) override;
+#if __has_feature(capabilities)
+  const struct target_desc *read_description () override;
+#endif
 };
 
 static riscv_fbsd_nat_target the_riscv_fbsd_nat_target;
@@ -50,6 +54,11 @@ riscv_fbsd_nat_target::fetch_registers (struct regcache *regcache,
 				  &riscv_fbsd_gregset);
   fetch_register_set<struct fpreg> (regcache, regnum, PT_GETFPREGS,
 				    &riscv_fbsd_fpregset);
+#if __has_feature(capabilities)
+  if (riscv_isa_clen (regcache->arch ()) != 0)
+    fetch_register_set<struct capreg> (regcache, regnum, PT_GETCAPREGS,
+				       &riscv_fbsd_capregset);
+#endif
 }
 
 /* Store register REGNUM back into the inferior.  If REGNUM is -1, do
@@ -63,7 +72,30 @@ riscv_fbsd_nat_target::store_registers (struct regcache *regcache,
 				  &riscv_fbsd_gregset);
   store_register_set<struct fpreg> (regcache, regnum, PT_GETFPREGS,
 				    PT_SETFPREGS, &riscv_fbsd_fpregset);
+#ifdef notyet
+  if (riscv_isa_clen (regcache->arch ()) != 0)
+    store_register_set<struct capreg> (regcache, regnum, PT_GETCAPREGS,
+				       PT_SETCAPREGS, &riscv_fbsd_capregset);
+#endif
 }
+
+#if __has_feature(capabilities)
+/* Implement the read_description method.  */
+
+const struct target_desc *
+riscv_fbsd_nat_target::read_description ()
+{
+  struct riscv_gdbarch_features features;
+  struct reg *reg;
+
+  features.xlen = sizeof (reg->ra);
+  features.flen = sizeof (uint64_t);
+  if (have_register_set<struct capreg> (inferior_ptid, PT_GETCAPREGS))
+    features.clen = sizeof (uintcap_t);
+
+  return riscv_lookup_target_description (features);
+}
+#endif
 
 INIT_GDB_FILE (riscv_fbsd_nat)
 {
