@@ -448,6 +448,7 @@ static inline unsigned int riscv_insn_length (insn_t insn)
 /* ABI names for selected c-registers.  */
 
 #define C_CRA 1
+#define C_CSP 2
 
 #define NGPR 32
 #define NFPR 32
@@ -743,6 +744,7 @@ extern const char * const riscv_fli_symval[32];
 extern const float riscv_fli_numval[32];
 
 extern const struct riscv_opcode riscv_opcodes[];
+extern const struct riscv_opcode riscv_capmode_opcodes[];
 extern const struct riscv_opcode riscv_insn_types[];
 
 extern unsigned int riscv_get_sp_base (insn_t, unsigned int);

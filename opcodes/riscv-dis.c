@@ -75,6 +75,9 @@ struct riscv_private_data
   bool all_ext;
 };
 
+/* If true, use capability mode for disassembly.  */
+static bool capmode = false;
+
 /* Set default RISC-V disassembler options.  */
 
 static void
@@ -767,6 +770,29 @@ print_insn_args (const char *oparg, insn_t l, bfd_vma pc, disassemble_info *info
 	    case 'C': /* CHERI */
 	      switch (*++oparg)
 		{
+		case 'C': /* RVC */
+		  switch (*++oparg)
+		    {
+		    case 's': /* CS1 c8-c15.  */
+		    case 'w': /* CS1 c8-c15.  */
+		      print (info->stream, dis_style_register, "%s",
+			     pd->riscv_gpcr_names[EXTRACT_OPERAND (CRS1S, l) + 8]);
+		      break;
+		    case 't': /* CS2 c8-c15.  */
+		    case 'x': /* CS2 c8-c15.  */
+		      print (info->stream, dis_style_register, "%s",
+			     pd->riscv_gpcr_names[EXTRACT_OPERAND (CRS2S, l) + 8]);
+		      break;
+		    case 'c': /* CS1, constrained to equal csp.  */
+		      print (info->stream, dis_style_register, "%s",
+			     pd->riscv_gpcr_names[C_CSP]);
+		      break;
+		    case 'V': /* CS2 */
+		      print (info->stream, dis_style_register, "%s",
+			     pd->riscv_gpcr_names[EXTRACT_OPERAND (CRS2, l)]);
+		      break;
+		    }
+		  break;
 		case 's':
 		  print (info->stream, dis_style_register, "%s",
 			 pd->riscv_gpcr_names[rs1]);
@@ -1008,9 +1034,11 @@ riscv_disassemble_insn (bfd_vma memaddr,
   const struct riscv_opcode *op;
   static bool init = false;
   static const struct riscv_opcode *riscv_hash[OP_MASK_OP + 1];
+  static const struct riscv_opcode *riscv_capmode_hash[OP_MASK_OP + 1];
   struct riscv_private_data *pd = info->private_data;
   int insnlen, i;
   bool printed;
+  bool use_capmode = capmode;
 
 #define OP_HASH_IDX(i) ((i) & (riscv_insn_length (i) == 2 ? 0x3 : OP_MASK_OP))
 
@@ -1020,6 +1048,10 @@ riscv_disassemble_insn (bfd_vma memaddr,
       for (op = riscv_opcodes; op->name; op++)
 	if (!riscv_hash[OP_HASH_IDX (op->match)])
 	  riscv_hash[OP_HASH_IDX (op->match)] = op;
+
+      for (op = riscv_capmode_opcodes; op->name; op++)
+	if (!riscv_capmode_hash[OP_HASH_IDX (op->match)])
+	  riscv_capmode_hash[OP_HASH_IDX (op->match)] = op;
 
       init = true;
     }
@@ -1040,7 +1072,11 @@ riscv_disassemble_insn (bfd_vma memaddr,
   info->target = 0;
   info->target2 = 0;
 
-  op = riscv_hash[OP_HASH_IDX (word)];
+ again:
+  if (use_capmode)
+    op = riscv_capmode_hash[OP_HASH_IDX (word)];
+  else
+    op = riscv_hash[OP_HASH_IDX (word)];
   if (op != NULL)
     {
       /* If XLEN is not known, get its value from the ELF class.  */
@@ -1127,6 +1163,12 @@ riscv_disassemble_insn (bfd_vma memaddr,
 
 	  return insnlen;
 	}
+    }
+
+  if (use_capmode)
+    {
+      use_capmode = false;
+      goto again;
     }
 
   /* We did not find a match, so just print the instruction bits in
@@ -1525,6 +1567,8 @@ riscv_init_disasm_info (struct disassemble_info *info)
 						      &pd->default_priv_spec);
 	      pd->default_arch = attr[Tag_RISCV_arch].s;
 	    }
+	  if (elf_elfheader (abfd)->e_flags & EF_RISCV_CAPMODE)
+	    capmode = true;
 	}
     }
 
@@ -1535,6 +1579,7 @@ riscv_init_disasm_info (struct disassemble_info *info)
   pd->last_map_section = NULL;
   pd->riscv_gpr_names = NULL;
   pd->riscv_fpr_names = NULL;
+  pd->riscv_gpcr_names = NULL;
   pd->no_aliases = false;
   pd->all_ext = false;
 
@@ -1639,6 +1684,12 @@ print_insn_riscv (bfd_vma memaddr, struct disassemble_info *info)
   insn = (insn_t) bfd_get_bits (packet, dump_size * 8, false);
 
   return (*riscv_disassembler) (memaddr, insn, packet, info);
+}
+
+disassembler_ftype
+riscv_get_disassembler (bfd *abfd)
+{
+  return print_insn_riscv;
 }
 
 /* Prevent use of the fake labels that are generated as part of the DWARF
