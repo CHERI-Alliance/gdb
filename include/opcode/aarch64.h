@@ -1664,7 +1664,15 @@ extern const aarch64_opcode aarch64_opcode_table[];
 /* Do no shift immediate operand.  */
 #define F_NOSHIFT (1ULL << 44)
 
-/* Next bit is 45.  */
+/* Opcode variant is invalidated by PSTATE.C64.  When PSTATE.C64 == 1, operation
+   requires use of capability operands.  */
+#define F_NONC64 (1ULL << 45)
+
+/* Opcode vatiant not suitable for morello hybrid mode and will fail unless
+   PSTATE.C64 == 1.  */
+#define F_C64ONLY (1ULL << 46)
+
+/* Next bit is 47.  */
 
 /* Instruction constraints.  */
 /* This instruction has a predication constraint on the instruction at PC+4.  */
