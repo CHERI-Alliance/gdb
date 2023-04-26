@@ -823,7 +823,7 @@ ctf_dynhash_insert_type (ctf_dict_t *fp, ctf_dynhash_t *hp, uint32_t type,
     return 0;		   /* Just ignore empty strings on behalf of caller.  */
 
   if ((err = ctf_dynhash_insert (hp, (char *) str,
-				 (void *) (ptrdiff_t) type)) == 0)
+				 (void *) (uintptr_t) type)) == 0)
     return 0;
 
   /* ctf_dynhash_insert returns a negative error value: negate it for
