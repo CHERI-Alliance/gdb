@@ -48,6 +48,7 @@ struct bstring
   {
     char data[1];
     double dummy;
+    void *pointer;
   }
   d;
 };
