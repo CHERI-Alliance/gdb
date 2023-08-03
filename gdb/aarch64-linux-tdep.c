@@ -3263,7 +3263,7 @@ aarch64_linux_init_abi (struct gdbarch_info info, struct gdbarch *gdbarch)
 
   tdep->lowest_pc = 0x8000;
 
-  linux_init_abi (info, gdbarch, 1);
+  linux_init_abi (info, gdbarch, tdep->has_capability () ? 0 : 1);
   set_solib_svr4_ops (gdbarch, make_linux_lp64_svr4_solib_ops);
 
   /* Enable TLS support.  */
