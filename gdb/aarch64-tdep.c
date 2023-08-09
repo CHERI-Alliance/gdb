@@ -423,6 +423,9 @@ show_aarch64_debug (struct ui_file *file, int from_tty,
   gdb_printf (file, _("AArch64 debugging is %s.\n"), value);
 }
 
+#define aarch64_debug_enter_exit() \
+  scoped_debug_enter_exit (aarch64_debug, "aarch64")
+
 namespace {
 
 /* Abstract instruction reader.  */
@@ -2099,8 +2102,7 @@ pass_in_c (struct gdbarch *gdbarch, struct regcache *regcache,
 	   struct aarch64_call_info *info, struct type *type,
 	   struct value *arg)
 {
-  if (aarch64_debug)
-    debug_printf ("aarch64: entering %s\n", __func__);
+  aarch64_debug_enter_exit ();
 
   aarch64_gdbarch_tdep *tdep = gdbarch_tdep<aarch64_gdbarch_tdep> (gdbarch);
   int regnum = tdep->cap_reg_base + info->ngrn;
@@ -2151,10 +2153,9 @@ pass_in_c (struct gdbarch *gdbarch, struct regcache *regcache,
 	  bool tag = cap[0] == 0 ? false : true;
 	  regcache->raw_supply_tag (regnum, tag);
 
-	  if (aarch64_debug)
-	    debug_printf ("aarch64: %s Read tag %s from address %s\n",
-			  __func__, tag == true ? "true" : "false",
-			  paddress (gdbarch, address));
+	  aarch64_debug_printf ("Read tag %s from address %s",
+				tag == true ? "true" : "false",
+				paddress (gdbarch, address));
 
 	  address += xfer_len;
 	}
@@ -2163,8 +2164,6 @@ pass_in_c (struct gdbarch *gdbarch, struct regcache *regcache,
       buf += xfer_len;
       regnum++;
     }
-  if (aarch64_debug)
-    debug_printf ("aarch64: leaving %s\n", __func__);
 }
 
 /* Pass a value in a sequence of consecutive X registers.  The caller
@@ -2175,8 +2174,7 @@ pass_in_x (struct gdbarch *gdbarch, struct regcache *regcache,
 	   struct aarch64_call_info *info, struct type *type,
 	   struct value *arg)
 {
-  if (aarch64_debug)
-    debug_printf ("aarch64: entering %s\n", __func__);
+  aarch64_debug_enter_exit ();
 
   enum bfd_endian byte_order = gdbarch_byte_order (gdbarch);
   int len = type->length ();
@@ -2208,8 +2206,6 @@ pass_in_x (struct gdbarch *gdbarch, struct regcache *regcache,
       buf += partial_len;
       regnum++;
     }
-  if (aarch64_debug)
-    debug_printf ("aarch64: leaving %s\n", __func__);
 }
 
 /* Attempt to marshall a value in a V register.  Return 1 if
@@ -2223,8 +2219,7 @@ pass_in_v (struct gdbarch *gdbarch,
 	   struct aarch64_call_info *info,
 	   int len, const bfd_byte *buf)
 {
-  if (aarch64_debug)
-    debug_printf ("aarch64: entering %s\n", __func__);
+  aarch64_debug_enter_exit ();
 
   if (info->nsrn < 8)
     {
@@ -2243,14 +2238,9 @@ pass_in_v (struct gdbarch *gdbarch,
 
       aarch64_debug_printf ("arg %d in %s", info->argnum,
 			    gdbarch_register_name (gdbarch, regnum));
-      if (aarch64_debug)
-	debug_printf ("aarch64: leaving %s\n", __func__);
       return 1;
     }
   info->nsrn = 8;
-
-  if (aarch64_debug)
-    debug_printf ("aarch64: leaving %s\n", __func__);
 
   return 0;
 }
@@ -2261,8 +2251,7 @@ static void
 pass_on_stack (struct aarch64_call_info *info, struct type *type,
 	       struct value *arg)
 {
-  if (aarch64_debug)
-    debug_printf ("aarch64: entering %s\n", __func__);
+  aarch64_debug_enter_exit ();
 
   const bfd_byte *buf = arg->contents ().data ();
   int len = type->length ();
@@ -2301,8 +2290,6 @@ pass_on_stack (struct aarch64_call_info *info, struct type *type,
       info->si.push_back (item);
       info->nsaa += pad;
     }
-  if (aarch64_debug)
-    debug_printf ("aarch64: leaving %s\n", __func__);
 }
 
 /* Marshall an argument into a sequence of one or more consecutive C
@@ -2314,8 +2301,7 @@ pass_in_c_or_stack (struct gdbarch *gdbarch, struct regcache *regcache,
 		    struct aarch64_call_info *info, struct type *type,
 		    struct value *arg)
 {
-  if (aarch64_debug)
-    debug_printf ("aarch64: entering %s\n", __func__);
+  aarch64_debug_enter_exit ();
 
   int len = type->length ();
   int nregs = (len + C_REGISTER_SIZE - 1) / C_REGISTER_SIZE;
@@ -2330,9 +2316,6 @@ pass_in_c_or_stack (struct gdbarch *gdbarch, struct regcache *regcache,
       info->ngrn = 8;
       pass_on_stack (info, type, arg);
     }
-
-  if (aarch64_debug)
-    debug_printf ("aarch64: leaving %s\n", __func__);
 }
 
 /* Marshall an argument into a sequence of one or more consecutive X
@@ -2344,8 +2327,7 @@ pass_in_x_or_stack (struct gdbarch *gdbarch, struct regcache *regcache,
 		    struct aarch64_call_info *info, struct type *type,
 		    struct value *arg)
 {
-  if (aarch64_debug)
-    debug_printf ("aarch64: entering %s\n", __func__);
+  aarch64_debug_enter_exit ();
 
   int len = type->length ();
   int nregs = (len + X_REGISTER_SIZE - 1) / X_REGISTER_SIZE;
@@ -2361,9 +2343,6 @@ pass_in_x_or_stack (struct gdbarch *gdbarch, struct regcache *regcache,
       info->ngrn = 8;
       pass_on_stack (info, type, arg);
     }
-
-  if (aarch64_debug)
-    debug_printf ("aarch64: leaving %s\n", __func__);
 }
 
 /* Morello: Marshall an argument into a sequence of one or more C registers.
@@ -2375,8 +2354,7 @@ pass_in_c_x_or_stack (struct gdbarch *gdbarch, struct regcache *regcache,
 		      struct aarch64_call_info *info, struct type *type,
 		      struct value *arg)
 {
-  if (aarch64_debug)
-    debug_printf ("aarch64: entering %s\n", __func__);
+  aarch64_debug_enter_exit ();
 
   /* Check if we have a case where we need to pass arguments via the C
      registers.  */
@@ -2384,9 +2362,6 @@ pass_in_c_x_or_stack (struct gdbarch *gdbarch, struct regcache *regcache,
     pass_in_c_or_stack (gdbarch, regcache, info, type, arg);
   else
     pass_in_x_or_stack (gdbarch, regcache, info, type, arg);
-
-  if (aarch64_debug)
-    debug_printf ("aarch64: leaving %s\n", __func__);
 }
 
 /* Pass a value, which is of type arg_type, in a V register.  Assumes value is a
@@ -2398,8 +2373,7 @@ pass_in_v_vfp_candidate (struct gdbarch *gdbarch, struct regcache *regcache,
 			 struct aarch64_call_info *info, struct type *arg_type,
 			 struct value *arg)
 {
-  if (aarch64_debug)
-    debug_printf ("aarch64: entering %s\n", __func__);
+  aarch64_debug_enter_exit ();
 
   switch (arg_type->code ())
     {
@@ -2551,8 +2525,7 @@ aarch64_shadow_stack_push (gdbarch *gdbarch, CORE_ADDR new_addr,
 static bool
 type_fields_overlap_capabilities (struct type *type)
 {
-  if (aarch64_debug)
-    debug_printf ("aarch64: entering %s\n", __func__);
+  aarch64_debug_enter_exit ();
 
   /* Types not containing capabilities and having sizes smaller than
      8 bytes don't have members overlapping capabilities.  */
@@ -2593,8 +2566,7 @@ static struct value *
 convert_pointer_to_capability (struct gdbarch *gdbarch, struct value *source,
 			       CORE_ADDR pointer)
 {
-  if (aarch64_debug)
-    debug_printf ("aarch64: entering %s\n", __func__);
+  aarch64_debug_enter_exit ();
 
   gdb_assert (TYPE_CAPABILITY (source->type ()));
 
@@ -2631,8 +2603,7 @@ static void
 morello_write_memory_with_capabilities (CORE_ADDR destination,
 					struct value *arg)
 {
-  if (aarch64_debug)
-    debug_printf ("aarch64: entering %s\n", __func__);
+  aarch64_debug_enter_exit ();
 
   gdb_assert (arg != nullptr);
 
@@ -2665,9 +2636,6 @@ morello_write_memory_with_capabilities (CORE_ADDR destination,
       source += MORELLO_MEMORY_TAG_GRANULE_SIZE;
       destination += MORELLO_MEMORY_TAG_GRANULE_SIZE;
     }
-
-  if (aarch64_debug)
-    debug_printf ("aarch64: Exiting %s\n", __func__);
 }
 
 /* Implement the "push_dummy_call" gdbarch method for Morello.  */
@@ -2687,23 +2655,17 @@ morello_push_dummy_call (struct gdbarch *gdbarch, struct value *function,
   /* We should only be here if this is a Morello architecture.  */
   gdb_assert (tdep->has_capability ());
 
-  if (aarch64_debug)
-    debug_printf ("aarch64: entering %s\n", __func__);
+  aarch64_debug_enter_exit ();
 
-  if (aarch64_debug)
-    debug_printf ("aarch64: %s Number of arguments: %s\n", __func__,
-		  pulongest (nargs));
+  aarch64_debug_printf ("Number of arguments: %s", pulongest (nargs));
 
   /* Morello AAPCS64-cap ABI.  */
   bool aapcs64_cap = (tdep->abi == AARCH64_ABI_AAPCS64_CAP);
 
-  if (aarch64_debug)
-    {
-      if (aapcs64_cap)
-	debug_printf ("aarch64: %s ABI is AAPCS64-CAP\n", __func__);
-      else
-	debug_printf ("aarch64: %s ABI is AAPCS64\n", __func__);
-    }
+  if (aapcs64_cap)
+    aarch64_debug_printf ("ABI is AAPCS64-CAP");
+  else
+    aarch64_debug_printf ("ABI is AAPCS64");
 
   /* We need to know what the type of the called function is in order
      to determine the number of named/anonymous arguments for the
@@ -2745,10 +2707,9 @@ morello_push_dummy_call (struct gdbarch *gdbarch, struct value *function,
   else
     regcache_cooked_write_unsigned (regcache, AARCH64_LR_REGNUM, bp_addr);
 
-  if (aarch64_debug)
-    debug_printf ("aarch64: Breakpoint address in %s is %s\n",
-		  gdbarch_register_name (gdbarch, regnum),
-		  paddress (gdbarch, bp_addr));
+  aarch64_debug_printf ("Breakpoint address in %s is %s",
+			gdbarch_register_name (gdbarch, regnum),
+			paddress (gdbarch, bp_addr));
 
 
   /* If we were given an initial argument for the return slot, lose it.  */
@@ -2780,13 +2741,9 @@ morello_push_dummy_call (struct gdbarch *gdbarch, struct value *function,
 	regcache_cooked_write_unsigned (regcache, AARCH64_STRUCT_RETURN_REGNUM,
 					struct_addr);
 
-      if (aarch64_debug)
-	{
-	  debug_printf ("aarch64: struct return in %s = 0x%s\n",
-			gdbarch_register_name (gdbarch,
-					       regnum),
-			paddress (gdbarch, struct_addr));
-	}
+      aarch64_debug_printf ("struct return in %s = 0x%s",
+			    gdbarch_register_name (gdbarch, regnum),
+			    paddress (gdbarch, struct_addr));
     }
 
   for (argnum = 0; argnum < nargs; argnum++)
@@ -2795,9 +2752,7 @@ morello_push_dummy_call (struct gdbarch *gdbarch, struct value *function,
       struct type *arg_type, *fundamental_type;
       int len, elements;
 
-      if (aarch64_debug)
-	debug_printf ("aarch64: %s Processing argument %s\n", __func__,
-		      pulongest (argnum));
+      aarch64_debug_printf ("Processing argument %s", pulongest (argnum));
 
       arg_type = check_typedef (arg->type ());
       len = arg_type->length ();
@@ -2832,9 +2787,7 @@ morello_push_dummy_call (struct gdbarch *gdbarch, struct value *function,
 	case TYPE_CODE_ENUM:
 	  if (len < 4)
 	    {
-	      if (aarch64_debug)
-		debug_printf ("aarch64: %s Handling types with length < 4\n",
-			      __func__);
+	      aarch64_debug_printf ("Handling types with length < 4");
 
 	      /* Promote to 32 bit integer.  */
 	      if (arg_type->is_unsigned ())
@@ -2843,9 +2796,8 @@ morello_push_dummy_call (struct gdbarch *gdbarch, struct value *function,
 		arg_type = builtin_type (gdbarch)->builtin_int32;
 	      arg = value_cast (arg_type, arg);
 	    }
-	  if (aarch64_debug && len >= 4)
-	    debug_printf ("aarch64: %s Handling types with length >= 4\n",
-			  __func__);
+	  if (len >= 4)
+	    aarch64_debug_printf ("Handling types with length >= 4");
 	  pass_in_x_or_stack (gdbarch, regcache, &info, arg_type, arg);
 	  break;
 
@@ -2856,9 +2808,8 @@ morello_push_dummy_call (struct gdbarch *gdbarch, struct value *function,
 	  if (arg_type->contains_capability ()
 	      && (len > 32 || type_fields_overlap_capabilities (arg_type)))
 	    {
-	      if (aarch64_debug)
-		debug_printf ("aarch64: %s Composite type with capabilities "
-			      "and len > 32 or overlapping types\n", __func__);
+	      aarch64_debug_printf ("Composite type with capabilities "
+				    "and len > 32 or overlapping types");
 	      /* If the argument is a Composite Type containing Capabilities
 		 and the size is larger than 32 bytes or there are
 		 addressable members which are not Capabilities that
@@ -2898,9 +2849,8 @@ morello_push_dummy_call (struct gdbarch *gdbarch, struct value *function,
 	    }
 	  else if (len > 16 && !arg_type->contains_capability ())
 	    {
-	      if (aarch64_debug)
-		debug_printf ("aarch64: %s Composite type without capabilities "
-			      "and len > 16\n", __func__);
+	      aarch64_debug_printf ("Composite type without capabilities "
+				    "and len > 16");
 	      /* Morello AAPCS B.3: Aggregates larger than 16 bytes, not
 		 containing capabilities, are passed by invisible reference.  */
 
@@ -2934,16 +2884,14 @@ morello_push_dummy_call (struct gdbarch *gdbarch, struct value *function,
 	    {
 	      /* PCS C.15 / C.18 multiple values pass.  */
 	      /* Morello AAPCS C.16 / C.8.  */
-	      if (aarch64_debug)
-		debug_printf ("aarch64: %s Composite type default case "
-			      "len is %s\n", __func__, pulongest (len));
+	      aarch64_debug_printf ("Composite type default case len is %s",
+				    pulongest (len));
 	      pass_in_c_x_or_stack (gdbarch, regcache, &info, arg_type, arg);
 	    }
 	  break;
 
 	default:
-	  if (aarch64_debug)
-	    debug_printf ("aarch64: %s default case\n", __func__);
+	  aarch64_debug_printf ("default case");
 	  pass_in_c_x_or_stack (gdbarch, regcache, &info, arg_type, arg);
 	  break;
 	}
@@ -2978,13 +2926,9 @@ morello_push_dummy_call (struct gdbarch *gdbarch, struct value *function,
   else
     regcache_cooked_write_unsigned (regcache, AARCH64_SP_REGNUM, sp);
 
-  if (aarch64_debug)
-    debug_printf ("aarch64: Adjusting stack pointer in %s to %s\n",
-		  gdbarch_register_name (gdbarch, regnum),
-		  paddress (gdbarch, sp));
-
-  if (aarch64_debug)
-    debug_printf ("aarch64: Exiting %s\n", __func__);
+  aarch64_debug_printf ("Adjusting stack pointer in %s to %s",
+			gdbarch_register_name (gdbarch, regnum),
+			paddress (gdbarch, sp));
 
   return sp;
 }
@@ -3786,8 +3730,7 @@ static void
 morello_extract_return_value (struct value *value, struct regcache *regs,
 			      gdb_byte *valbuf)
 {
-  if (aarch64_debug)
-    debug_printf ("aarch64: entering %s\n", __func__);
+  aarch64_debug_enter_exit ();
 
   struct type *type = value->type ();
   struct gdbarch *gdbarch = regs->arch ();
@@ -3798,9 +3741,7 @@ morello_extract_return_value (struct value *value, struct regcache *regs,
   /* Morello AAPCS64-cap ABI.  */
   bool aapcs64_cap = (tdep->abi == AARCH64_ABI_AAPCS64_CAP);
 
-  if (aarch64_debug)
-    debug_printf ("aarch64: %s: ABI is %s\n", __func__,
-		  aapcs64_cap ? "AAPCS64-CAP" : "AAPCS64");
+  aarch64_debug_printf ("ABI is %s", aapcs64_cap ? "AAPCS64-CAP" : "AAPCS64");
 
   if (aapcs_is_vfp_call_or_return_candidate (type, &elements,
 					     &fundamental_type))
@@ -3814,12 +3755,10 @@ morello_extract_return_value (struct value *value, struct regcache *regs,
 	  gdb_byte buf[register_size (gdbarch, regno)];
 	  gdb_assert (len <= sizeof (buf));
 
-	  if (aarch64_debug)
-	    {
-	      debug_printf ("read HFA or HVA return value element %d from %s\n",
-			    i + 1,
-			    gdbarch_register_name (gdbarch, regno));
-	    }
+	  aarch64_debug_printf
+	    ("read HFA or HVA return value element %d from %s", i + 1,
+	     gdbarch_register_name (gdbarch, regno));
+
 	  regs->cooked_read (regno, buf);
 
 	  memcpy (valbuf, buf, len);
@@ -3830,8 +3769,7 @@ morello_extract_return_value (struct value *value, struct regcache *regs,
 	   || type->code () == TYPE_CODE_CAPABILITY
 	   || TYPE_IS_REFERENCE (type))
     {
-      if (aarch64_debug)
-	debug_printf ("aarch64: %s: Pointer/Capability types\n", __func__);
+      aarch64_debug_printf ("Pointer/Capability types");
 
       int regno;
 
@@ -3850,9 +3788,8 @@ morello_extract_return_value (struct value *value, struct regcache *regs,
 	   || type->code () == TYPE_CODE_BOOL
 	   || type->code () == TYPE_CODE_ENUM)
     {
-      if (aarch64_debug)
-	debug_printf ("aarch64: %s: Integral types, size %s\n", __func__,
-		      pulongest (type->length ()));
+      aarch64_debug_printf ("Integral types, size %s",
+			    pulongest (type->length ()));
 
       /* If the type is a plain integer, then the access is
 	 straight-forward.  Otherwise we have to play around a bit
@@ -3875,9 +3812,9 @@ morello_extract_return_value (struct value *value, struct regcache *regs,
     }
   else
     {
-      if (aarch64_debug)
-	debug_printf ("aarch64: %s: Composite types, size %s\n", __func__,
-		      pulongest (type->length ()));
+      aarch64_debug_printf ("Composite types, size %s",
+			    pulongest (type->length ()));
+
       /* For a structure or union the behaviour is as if the value had
          been stored to word-aligned memory and then loaded into
          registers with 64-bit load instruction(s).  */
@@ -3894,8 +3831,6 @@ morello_extract_return_value (struct value *value, struct regcache *regs,
 	  valbuf += C_REGISTER_SIZE;
 	}
     }
-  if (aarch64_debug)
-    debug_printf ("aarch64: leaving %s\n", __func__);
 }
 
 
@@ -3906,8 +3841,7 @@ morello_extract_return_value (struct value *value, struct regcache *regs,
 static bool
 morello_return_in_memory (struct gdbarch *gdbarch, struct type *type)
 {
-  if (aarch64_debug)
-    debug_printf ("aarch64: entering %s\n", __func__);
+  aarch64_debug_enter_exit ();
 
   type = check_typedef (type);
   int elements;
@@ -3919,8 +3853,7 @@ morello_return_in_memory (struct gdbarch *gdbarch, struct type *type)
       /* v0-v7 are used to return values and one register is allocated
 	 for one member.  However, HFA or HVA has at most four members.  */
 
-      if (aarch64_debug)
-	debug_printf ("aarch64: %s: Morello AAPCS VFP\n", __func__);
+      aarch64_debug_printf ("Morello AAPCS VFP");
 
       return false;
     }
@@ -3931,8 +3864,7 @@ morello_return_in_memory (struct gdbarch *gdbarch, struct type *type)
   if (type->contains_capability ()
       && (length > 32 || type_fields_overlap_capabilities (type)))
     {
-      if (aarch64_debug)
-	debug_printf ("aarch64: %s: Morello AAPCS B.5\n", __func__);
+      aarch64_debug_printf ("Morello AAPCS B.5");
 
       return true;
     }
@@ -3940,8 +3872,7 @@ morello_return_in_memory (struct gdbarch *gdbarch, struct type *type)
   /* Morello AAPCS B.3 */
   if (length > 16 && !type->contains_capability ())
     {
-      if (aarch64_debug)
-	debug_printf ("aarch64: %s: Morello AAPCS B.3\n", __func__);
+      aarch64_debug_printf ("Morello AAPCS B.3");
 
       return true;
     }
@@ -4242,8 +4173,7 @@ static void
 morello_store_return_value (struct value *value, struct regcache *regs,
 			    const gdb_byte *valbuf)
 {
-  if (aarch64_debug)
-    debug_printf ("aarch64: entering %s\n", __func__);
+  aarch64_debug_enter_exit ();
 
   struct type *type = value->type ();
   struct gdbarch *gdbarch = regs->arch ();
@@ -4254,9 +4184,7 @@ morello_store_return_value (struct value *value, struct regcache *regs,
   /* Morello AAPCS64-cap ABI.  */
   bool aapcs64_cap = (tdep->abi == AARCH64_ABI_AAPCS64_CAP);
 
-  if (aarch64_debug)
-    debug_printf ("aarch64: %s: ABI is %s\n", __func__,
-		  aapcs64_cap ? "AAPCS64-CAP" : "AAPCS64");
+  aarch64_debug_printf ("ABI is %s", aapcs64_cap ? "AAPCS64-CAP" : "AAPCS64");
 
   if (aapcs_is_vfp_call_or_return_candidate (type, &elements,
 					     &fundamental_type))
@@ -4270,12 +4198,9 @@ morello_store_return_value (struct value *value, struct regcache *regs,
 	  gdb_byte tmpbuf[register_size (gdbarch, regno)];
 	  gdb_assert (len <= sizeof (tmpbuf));
 
-	  if (aarch64_debug)
-	    {
-	      debug_printf ("write HFA or HVA return value element %d to %s\n",
-			    i + 1,
-			    gdbarch_register_name (gdbarch, regno));
-	    }
+	  aarch64_debug_printf
+	    ("write HFA or HVA return value element %d to %s", i + 1,
+	     gdbarch_register_name (gdbarch, regno));
 
 	  memcpy (tmpbuf, valbuf,
 		  len > V_REGISTER_SIZE ? V_REGISTER_SIZE : len);
@@ -4289,8 +4214,7 @@ morello_store_return_value (struct value *value, struct regcache *regs,
     {
       int regno;
 
-      if (aarch64_debug)
-	debug_printf ("aarch64: %s: Pointer/Capability types\n", __func__);
+      aarch64_debug_printf ("Pointer/Capability types");
 
       if (aapcs64_cap || type->code () == TYPE_CODE_CAPABILITY)
 	regno = tdep->cap_reg_base + AARCH64_X0_REGNUM;
@@ -4308,9 +4232,8 @@ morello_store_return_value (struct value *value, struct regcache *regs,
 	   || type->code () == TYPE_CODE_BOOL
 	   || type->code () == TYPE_CODE_ENUM)
     {
-      if (aarch64_debug)
-	debug_printf ("aarch64: %s: Integral types, size %s\n", __func__,
-		      pulongest (type->length ()));
+      aarch64_debug_printf ("Integral types, size %s",
+			    pulongest (type->length ()));
 
       if (type->length () <= X_REGISTER_SIZE)
 	{
@@ -4342,9 +4265,9 @@ morello_store_return_value (struct value *value, struct regcache *regs,
     }
   else
     {
-      if (aarch64_debug)
-	debug_printf ("aarch64: %s: Composite types, size %s\n", __func__,
-		      pulongest (type->length ()));
+      aarch64_debug_printf ("Composite types, size %s",
+			    pulongest (type->length ()));
+
       /* For a structure or union the behaviour is as if the value had
 	 been stored to word-aligned memory and then loaded into
 	 registers with 64-bit load instruction(s).  */
@@ -4376,10 +4299,9 @@ morello_store_return_value (struct value *value, struct regcache *regs,
 	      bool tag = cap[0] == 0 ? false : true;
 	      regs->raw_supply_tag (regno, tag);
 
-	      if (aarch64_debug)
-		debug_printf ("aarch64: %s Read tag %s from address %s\n",
-			      __func__, tag == true ? "true" : "false",
-			      paddress (gdbarch, address));
+	      aarch64_debug_printf ("Read tag %s from address %s",
+				    tag == true ? "true" : "false",
+				    paddress (gdbarch, address));
 	      address += buffer_size;
 	    }
 
@@ -4392,8 +4314,6 @@ morello_store_return_value (struct value *value, struct regcache *regs,
 	  valbuf += buffer_size;
 	}
     }
-  if (aarch64_debug)
-    debug_printf ("aarch64: leaving %s\n", __func__);
 }
 
 /* Write into appropriate registers a function return value of type
@@ -4656,8 +4576,7 @@ morello_return_value (struct gdbarch *gdbarch, struct value *func_value,
 		      struct type *valtype, struct regcache *regcache,
 		      struct value **read_value, struct value *write_value)
 {
-  if (aarch64_debug)
-    debug_printf ("aarch64: entering %s\n", __func__);
+  aarch64_debug_enter_exit ();
 
   if (valtype->code () == TYPE_CODE_STRUCT
       || valtype->code () == TYPE_CODE_UNION
@@ -4665,11 +4584,7 @@ morello_return_value (struct gdbarch *gdbarch, struct value *func_value,
     {
       if (morello_return_in_memory (gdbarch, valtype))
 	{
-	  if (aarch64_debug)
-	    debug_printf ("return value in memory\n");
-
-	  if (aarch64_debug)
-	    debug_printf ("aarch64: exiting %s\n", __func__);
+	  aarch64_debug_printf ("return value in memory");
 
 	  return RETURN_VALUE_STRUCT_CONVENTION;
 	}
@@ -4686,11 +4601,7 @@ morello_return_value (struct gdbarch *gdbarch, struct value *func_value,
 				    (*read_value)->contents_raw ().data ());
     }
 
-  if (aarch64_debug)
-    debug_printf ("return value in registers\n");
-
-  if (aarch64_debug)
-    debug_printf ("aarch64: exiting %s\n", __func__);
+  aarch64_debug_printf ("return value in registers");
 
   return RETURN_VALUE_REGISTER_CONVENTION;
 }
@@ -6478,8 +6389,7 @@ aarch64_pointer_to_address (struct gdbarch *gdbarch, struct type *type,
 {
   enum bfd_endian byte_order = gdbarch_byte_order (gdbarch);
 
-  if (aarch64_debug)
-    debug_printf ("aarch64: entering %s\n", __func__);
+  aarch64_debug_enter_exit ();
 
   if (type->length () <= 8)
     return signed_pointer_to_address (gdbarch, type, buf);
@@ -6489,9 +6399,6 @@ aarch64_pointer_to_address (struct gdbarch *gdbarch, struct type *type,
 	 the extra information.  */
       return extract_unsigned_integer (buf, 8, byte_order);
     }
-
-  if (aarch64_debug)
-    debug_printf ("aarch64: Exiting %s\n", __func__);
 }
 
 /* Implements the gdbarch_address_to_pointer hook.  */
@@ -6502,8 +6409,7 @@ aarch64_address_to_pointer (struct gdbarch *gdbarch, struct type *type,
 {
   enum bfd_endian byte_order = gdbarch_byte_order (gdbarch);
 
-  if (aarch64_debug)
-    debug_printf ("aarch64: Entering %s\n", __func__);
+  aarch64_debug_enter_exit ();
 
   if (type->length () <= 8)
     address_to_signed_pointer (gdbarch, type, buf, addr);
@@ -6513,9 +6419,6 @@ aarch64_address_to_pointer (struct gdbarch *gdbarch, struct type *type,
       memset (buf, 0, type->length ());
       store_unsigned_integer (buf, 8, byte_order, addr);
     }
-
-  if (aarch64_debug)
-    debug_printf ("aarch64: Exiting %s\n", __func__);
 }
 
 /* Implements the gdbarch_integer_to_address hook.  */
@@ -6524,13 +6427,9 @@ static CORE_ADDR
 aarch64_integer_to_address (struct gdbarch *gdbarch,
 			    struct type *type, const gdb_byte *buf)
 {
-  if (aarch64_debug)
-    debug_printf ("aarch64: Entering %s\n", __func__);
+  aarch64_debug_enter_exit ();
 
   return aarch64_pointer_to_address (gdbarch, type, buf);
-
-  if (aarch64_debug)
-    debug_printf ("aarch64: Exiting %s\n", __func__);
 }
 
 /* Remove useless bits from addresses in a running program.  This is
@@ -6574,31 +6473,25 @@ morello_print_cap_attributes (struct gdbarch *gdbarch, const gdb_byte *contents,
 static bool
 aarch64_bfd_has_capabilities (bfd *abfd)
 {
-  if (aarch64_debug)
-    debug_printf ("%s: Entering\n", __func__);
+  aarch64_debug_enter_exit ();
 
   gdb_assert (abfd != nullptr);
 
   int e_flags = elf_elfheader (abfd)->e_flags;
 
-  if (aarch64_debug)
-    debug_printf ("%s: e_flags = %x\n", __func__, e_flags);
+  aarch64_debug_printf ("e_flags = %x", e_flags);
 
   if (e_flags & EF_AARCH64_CHERI_PURECAP)
     return true;
 
-  if (aarch64_debug)
-    debug_printf ("%s: e_flags doesn't contain EF_AARCH64_CHERI_PURECAP.\n",
-		  __func__);
+  aarch64_debug_printf ("e_flags doesn't contain EF_AARCH64_CHERI_PURECAP.");
 
   /* Use the LSB of e_entry for now.  If the LSB is set, this means we have a
      Morello pure capability binary.  */
   if (elf_elfheader (abfd)->e_entry & 1)
     return true;
 
-  if (aarch64_debug)
-    debug_printf ("%s: e_entry's LSB is not set.  Assuming AAPCS64 ABI.\n",
-		  __func__);
+  aarch64_debug_printf ("e_entry's LSB is not set.  Assuming AAPCS64 ABI.");
 
   /* Assume this is a Hybrid ABI ELF.  */
   return false;
@@ -6610,8 +6503,7 @@ aarch64_bfd_has_capabilities (bfd *abfd)
 static void
 aarch64_elf_make_msymbol_special(asymbol *sym, struct minimal_symbol *msym)
 {
-  if (aarch64_debug)
-    debug_printf ("%s: Entering\n", __func__);
+  aarch64_debug_enter_exit ();
 
   /* We are interested in symbols that represent functions whose addresses
      have the LSB set.  */
@@ -6623,9 +6515,8 @@ aarch64_elf_make_msymbol_special(asymbol *sym, struct minimal_symbol *msym)
       msym->set_unrelocated_address (unrelocated_addr (addr & ~1));
     }
 
-  if (aarch64_debug)
-    debug_printf ("%s: Symbol %s is %sspecial\n", __func__,
-		  sym->name, MSYMBOL_IS_SPECIAL (msym)? "" : "not ");
+  aarch64_debug_printf ("Symbol %s is %sspecial", sym->name,
+			MSYMBOL_IS_SPECIAL (msym)? "" : "not ");
 }
 
 /* Record mapping symbols for Morello.  From the documentation, those
@@ -6643,8 +6534,7 @@ static void
 aarch64_record_special_symbol (struct gdbarch *gdbarch, struct objfile *objfile,
 			       asymbol *sym)
 {
-  if (aarch64_debug)
-    debug_printf ("%s: Entering\n", __func__);
+  aarch64_debug_enter_exit ();
 
   const char *name = bfd_asymbol_name (sym);
   struct aarch64_per_bfd *data;
@@ -6652,8 +6542,7 @@ aarch64_record_special_symbol (struct gdbarch *gdbarch, struct objfile *objfile,
 
   gdb_assert (name[0] == '$');
 
-  if(aarch64_debug)
-    debug_printf ("%s: Checking symbol %s\n", __func__, name);
+  aarch64_debug_printf ("Checking symbol %s", name);
 
   if (name[1] != 'x' && name[1] != 'c' && name[1] != 'd')
     return;
@@ -6671,9 +6560,7 @@ aarch64_record_special_symbol (struct gdbarch *gdbarch, struct objfile *objfile,
   /* Insert at the end, the vector will be sorted on first use.  */
   map.push_back (new_map_sym);
 
-  if (aarch64_debug)
-    debug_printf ("%s: Symbol %s recorded as special.\n", __func__,
-		  name);
+  aarch64_debug_printf ("Symbol %s recorded as special.", name);
 }
 
 /* Morello-specific hook to write the PC.  This is mostly used when calling
