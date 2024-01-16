@@ -737,7 +737,6 @@ extern void put_frame_register (const frame_info_ptr &next_frame, int regnum,
 
 /* Same as put_frame_register, but passing a struct value *.  */
 extern void put_frame_register (const frame_info_ptr &next_frame, int regnum,
-				gdb::array_view<const gdb_byte> buf,
 				struct value *fromval);
 
 /* Read LEN bytes from one or multiple registers starting with REGNUM in

@@ -1450,9 +1450,10 @@ read_frame_register_unsigned (const frame_info_ptr &frame, int regnum,
 
 void
 put_frame_register (const frame_info_ptr &next_frame, int regnum,
-		    gdb::array_view<const gdb_byte> buf, struct value *fromval)
+		    struct value *fromval)
 {
   gdbarch *gdbarch = frame_unwind_arch (next_frame);
+  gdb::array_view<const gdb_byte> buf = fromval->contents ();
   int realnum;
   int optim;
   int unavail;
@@ -1683,7 +1684,7 @@ put_frame_register_value (const frame_info_ptr &next_frame, int regnum,
   /* If the value is exactly one register.  */
   if (offset == 0 && buffer.size () == register_size (gdbarch, regnum))
     {
-      put_frame_register (next_frame, regnum, buffer, fromval);
+      put_frame_register (next_frame, regnum, fromval);
       return;
     }
 
