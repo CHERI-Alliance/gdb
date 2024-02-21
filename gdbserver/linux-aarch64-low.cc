@@ -1304,6 +1304,8 @@ aarch64_target::low_auxv_wordsize (int pid, const int is_elf64)
 	      layout_c = true;
 	      break;
 	    }
+
+	  offset += sizeof (data);
 	}
 
       if (layout_c)
@@ -1331,6 +1333,8 @@ aarch64_target::low_get_auxv (int pid, int wordsize, CORE_ADDR match,
 	      *valp = data_p[2];
 	      return 1;
 	    }
+
+	  offset += sizeof (data);
 	}
 
       return 0;
