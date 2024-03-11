@@ -319,4 +319,9 @@ std::optional<CORE_ADDR> aarch64_mte_get_atag (CORE_ADDR address);
 CORE_ADDR aarch64_remove_non_address_bits (struct gdbarch *gdbarch,
 					   CORE_ADDR pointer);
 
+/* Convert a 64-bit pointer to a capability using the SOURCE capability.  */
+
+struct value *aarch64_convert_pointer_to_capability (struct value *source,
+						     CORE_ADDR pointer);
+
 #endif /* GDB_AARCH64_TDEP_H */
