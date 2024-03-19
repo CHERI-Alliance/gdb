@@ -1078,6 +1078,7 @@ do_print_frame_info (struct ui_out *uiout, const frame_print_options &fp_opts,
 	  uiout->field_string ("func", "<cross-compartment call>",
 			       metadata_style.style ());
 	}
+      frame_print_info (frame, uiout);
       uiout->text ("\n");
       annotate_frame_end ();
 

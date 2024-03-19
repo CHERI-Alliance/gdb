@@ -156,6 +156,12 @@ typedef void (frame_dealloc_cache_ftype) (frame_info *self,
 typedef gdbarch *(frame_prev_arch_ftype) (const frame_info_ptr &this_frame,
 					  void **this_prologue_cache);
 
+/* Output additional details about a THIS_FRAME to the output stream
+   UIOUT.  */
+
+typedef void (frame_print_info_ftype) (frame_info_ptr this_frame,
+				       struct ui_out *uiout);
+
 /* Unwinders are classified by what part of GDB code created it.  */
 enum frame_unwind_class
 {
@@ -237,6 +243,8 @@ public:
 			      void **this_prologue_cache) const
   { return get_frame_arch (this_frame); }
 
+  virtual frame_print_info_ftype *print_info () const { return nullptr; }
+
 private:
 
   /* Name of the unwinder.  Used to uniquely identify unwinders.  */
@@ -313,6 +321,8 @@ struct frame_unwind_legacy : public frame_unwind
   struct gdbarch *prev_arch (const frame_info_ptr &this_frame,
 			     void **this_prologue_cache) const override;
 
+  frame_print_info_ftype *print_info () const override { return m_print_info; }
+
 private:
 
   frame_unwind_stop_reason_ftype *m_stop_reason;
@@ -321,6 +331,7 @@ private:
   frame_sniffer_ftype *m_sniffer;
   frame_dealloc_cache_ftype *m_dealloc_cache;
   frame_prev_arch_ftype *m_prev_arch;
+  frame_print_info_ftype *m_print_info;
 };
 
 /* Register a frame unwinder, _prepending_ it to the front of the

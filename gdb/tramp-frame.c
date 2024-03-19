@@ -61,9 +61,10 @@ class frame_unwind_trampoline : public frame_unwind
 {
 public:
   frame_unwind_trampoline (enum frame_type type, const struct frame_data *data,
-			   frame_prev_arch_ftype *prev_arch_func)
+			   frame_prev_arch_ftype *prev_arch_func,
+         frame_print_info_ftype *print_info_func = nullptr)
     : frame_unwind ("trampoline", type, FRAME_UNWIND_GDB, data),
-      m_prev_arch (prev_arch_func)
+      m_prev_arch (prev_arch_func), m_print_info (print_info_func)
   { }
 
   int sniff (const frame_info_ptr &this_frame,
@@ -84,8 +85,11 @@ public:
     return m_prev_arch (this_frame, this_prologue_cache);
   }
 
+  frame_print_info_ftype *print_info () const override { return m_print_info; }
+
 private:
   frame_prev_arch_ftype *m_prev_arch;
+  frame_print_info_ftype *m_print_info;
 };
 
 void
@@ -196,6 +200,7 @@ tramp_frame_prepend_unwinder (struct gdbarch *gdbarch,
   unwinder = obstack_new <frame_unwind_trampoline> (gdbarch_obstack (gdbarch),
 						    tramp_frame->frame_type,
 						    data,
-						    tramp_frame->prev_arch);
+						    tramp_frame->prev_arch,
+                tramp_frame->print_info);
   frame_unwind_prepend_unwinder (gdbarch, unwinder);
 }
