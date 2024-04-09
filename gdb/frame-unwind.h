@@ -383,6 +383,6 @@ value *frame_unwind_got_bytes (const frame_info_ptr &frame, int regnum,
    CORE_ADDR to a target address if necessary.  */
 
 value *frame_unwind_got_address (const frame_info_ptr &frame, int regnum,
-				 CORE_ADDR addr);
+				 CORE_ADDR addr, int src_regnum = -1);
 
 #endif /* GDB_FRAME_UNWIND_H */
