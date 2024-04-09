@@ -855,6 +855,7 @@ struct dwarf2_frame_cache
 {
   /* DWARF Call Frame Address.  */
   CORE_ADDR cfa;
+  int cfa_reg;
 
   /* Set if the return address column was marked as unavailable
      (required non-collected memory or registers to compute).  */
@@ -981,6 +982,7 @@ dwarf2_frame_cache (const frame_info_ptr &this_frame, void **this_cache)
       switch (fs.regs.cfa_how)
 	{
 	case CFA_REG_OFFSET:
+	  cache->cfa_reg = dwarf_reg_to_regnum (gdbarch, fs.regs.cfa_reg);
 	  cache->cfa = read_addr_from_reg (this_frame, fs.regs.cfa_reg);
 	  if (fs.armcc_cfa_offsets_reversed)
 	    cache->cfa -= fs.regs.cfa_offset;
@@ -989,6 +991,7 @@ dwarf2_frame_cache (const frame_info_ptr &this_frame, void **this_cache)
 	  break;
 
 	case CFA_EXP:
+	  cache->cfa_reg = -1;
 	  cache->cfa =
 	    execute_stack_op (fs.regs.cfa_exp, fs.regs.cfa_exp_len,
 			      cache->addr_size, this_frame, 0, 0,
@@ -1226,18 +1229,20 @@ dwarf2_frame_prev_register (const frame_info_ptr &this_frame, void **this_cache,
       return frame_unwind_got_register (this_frame, regnum, regnum);
 
     case DWARF2_FRAME_REG_CFA:
-      return frame_unwind_got_address (this_frame, regnum, cache->cfa);
+      return frame_unwind_got_address (this_frame, regnum, cache->cfa,
+				       cache->cfa_reg);
 
     case DWARF2_FRAME_REG_CFA_OFFSET:
       addr = cache->cfa + cache->reg[regnum].loc.offset;
-      return frame_unwind_got_address (this_frame, regnum, addr);
+      return frame_unwind_got_address (this_frame, regnum, addr,
+				       cache->cfa_reg);
 
     case DWARF2_FRAME_REG_RA_OFFSET:
       addr = cache->reg[regnum].loc.offset;
       regnum = dwarf_reg_to_regnum_or_error
 	(gdbarch, cache->retaddr_reg.loc.reg);
       addr += get_frame_register_unsigned (this_frame, regnum);
-      return frame_unwind_got_address (this_frame, regnum, addr);
+      return frame_unwind_got_address (this_frame, regnum, addr, regnum);
 
     case DWARF2_FRAME_REG_FN:
       return cache->reg[regnum].loc.fn (this_frame, this_cache, regnum);
