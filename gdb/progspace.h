@@ -25,6 +25,8 @@
 #include "target.h"
 #include "gdb_bfd.h"
 #include "registry.h"
+#include "comparts.h"
+#include "gdbsupport/next-iterator.h"
 #include "gdbsupport/safe-iterator.h"
 #include "gdbsupport/intrusive_list.h"
 #include "gdbsupport/owning_intrusive_list.h"
@@ -381,6 +383,9 @@ struct program_space
   /* When an solib is removed, its name is added to this vector.
      This is so we can properly report solib changes to the user.  */
   std::vector<std::string> deleted_solibs;
+
+  /* List of compartments in this space.  Managed by comparts.c.  */
+  compart_list compart_list;
 
   /* Per pspace data-pointers required by other GDB modules.  */
   registry<program_space> registry_fields;

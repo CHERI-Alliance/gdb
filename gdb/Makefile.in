@@ -1079,6 +1079,7 @@ COMMON_SFILES = \
 	c-varobj.c \
 	charset.c \
 	cli-out.c \
+	comparts.c \
 	complaints.c \
 	completer.c \
 	copying.c \
@@ -1366,6 +1367,7 @@ HFILES_NO_SRCDIR = \
 	cli-out.h \
 	coff-pe-read.h \
 	command.h \
+	comparts.h \
 	compile/compile-c.h \
 	compile/compile-cplus.h \
 	compile/compile.h \
