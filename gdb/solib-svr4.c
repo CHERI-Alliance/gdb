@@ -816,6 +816,12 @@ locate_default_debug_base ()
   /* DT_DEBUG entry not found.  */
   return 0;
 }
+CORE_ADDR
+svr4_elf_locate_base ()
+{
+  return locate_default_debug_base ();
+}
+
 
 /* See solib-svr4.h.  */
 

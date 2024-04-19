@@ -236,6 +236,8 @@ int musl_link_map_to_tls_module_id (CORE_ADDR lm_addr);
    module id, or 0 if not found.  */
 int glibc_link_map_to_tls_module_id (CORE_ADDR lm_addr);
 
+CORE_ADDR svr4_elf_locate_base ();
+
 /* Return program interpreter string.  */
 
 std::optional<gdb::byte_vector> svr4_find_program_interpreter ();
