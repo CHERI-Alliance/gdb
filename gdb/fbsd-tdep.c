@@ -2007,9 +2007,9 @@ fbsd_get_syscall_number (struct gdbarch *gdbarch, thread_info *thread)
   internal_error (_("fbsd_get_sycall_number called"));
 }
 
-/* Read an integer symbol value from the current target.  */
+/* See fbsd-tdep.h.  */
 
-static LONGEST
+LONGEST
 fbsd_read_integer_by_name (struct gdbarch *gdbarch, const char *name)
 {
   bound_minimal_symbol ms
