@@ -3042,7 +3042,7 @@ struct value *
 value::primitive_field (LONGEST offset, int fieldno, struct type *arg_type)
 {
   struct value *v;
-  struct type *type;
+  struct type *type, *resolved_type;
   int unit_size = gdbarch_addressable_memory_unit_size (arch ());
 
   arg_type = check_typedef (arg_type);
@@ -3054,7 +3054,7 @@ value::primitive_field (LONGEST offset, int fieldno, struct type *arg_type)
      replace the typedef type by the target type, because we want
      to keep the typedef in order to be able to print the type
      description correctly.  */
-  check_typedef (type);
+  resolved_type = check_typedef (type);
 
   if (arg_type->field (fieldno).bitsize ())
     {
@@ -3107,7 +3107,7 @@ value::primitive_field (LONGEST offset, int fieldno, struct type *arg_type)
       else
 	boffset = arg_type->field (fieldno).loc_bitpos () / 8;
 
-      if (lazy () || type->contains_capability ())
+      if (lazy () || resolved_type->contains_capability ())
 	v = value::allocate_lazy (enclosing_type ());
       else
 	{
@@ -3139,8 +3139,8 @@ value::primitive_field (LONGEST offset, int fieldno, struct type *arg_type)
       if (this->lval () == lval_register && lazy ())
 	fetch_lazy ();
 
-      if (lazy () || type->code () == TYPE_CODE_CAPABILITY
-	  || TYPE_CAPABILITY (type))
+      if (lazy () || resolved_type->code () == TYPE_CODE_CAPABILITY
+	  || TYPE_CAPABILITY (resolved_type))
 	v = value::allocate_lazy (type);
       else
 	{
