@@ -2738,6 +2738,10 @@ extern void apply_bit_offset_to_field (struct field &field,
 
 extern struct type *check_typedef (struct type *);
 
+/* Returns whether TYPE is a capability.  */
+
+extern bool is_capability (struct type *type);
+
 extern void check_stub_method_group (struct type *, int);
 
 extern char *gdb_mangle_name (struct type *, int, int);
