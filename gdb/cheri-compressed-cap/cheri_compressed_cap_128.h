@@ -61,6 +61,7 @@
 __extension__ typedef unsigned __int128 cc128_length_t;
 __extension__ typedef signed __int128 cc128_offset_t;
 typedef uint64_t cc128_addr_t;
+typedef int64_t cc128_saddr_t;
 #include "cheri_compressed_cap_macros.h"
 
 /* ignore ISO C restricts enumerator values to range of 'int' */
@@ -87,8 +88,22 @@ enum {
     _CC_FIELD(EXPONENT_HIGH_PART, 80, 78),
     _CC_FIELD(EXP_NONZERO_BOTTOM, 77, 67),
     _CC_FIELD(EXPONENT_LOW_PART, 66, 64),
+    /* The following fields are unused for the 128 format. */
+    _CC_FIELD(RESERVED2, 81, 82),
+    _CC_FIELD(SEALED, 81, 82),
+    _CC_FIELD(SDP, 81, 82),
+    _CC_FIELD(AP, 81, 82),
+    _CC_FIELD(EF, 81, 82),
+    _CC_FIELD(L8, 81, 82),
 };
 #pragma GCC diagnostic pop
+
+#define CC128_FIELD_FLAGS_USED 1
+#define CC128_FIELD_OTYPE_USED 1
+#define CC128_FIELD_HWPERMS_USED 1
+#define CC128_FIELD_UPERMS_USED 1
+#define CC128_FIELD_EF_USED 0
+#define CC128_FIELD_L8_USED 0
 
 #define CC128_OTYPE_BITS CC128_FIELD_OTYPE_SIZE
 #define CC128_BOT_WIDTH CC128_FIELD_EXP_ZERO_BOTTOM_SIZE
@@ -127,11 +142,11 @@ enum _CC_N(OTypes) {
     _CC_SPECIAL_OTYPE(OTYPE_SENTRY, 1),
     _CC_SPECIAL_OTYPE(OTYPE_INDIRECT_PAIR, 2),
     _CC_SPECIAL_OTYPE(OTYPE_INDIRECT_SENTRY, 3),
-    _CC_SPECIAL_OTYPE(OTYPE_RESERVED_LAST, 15),
+    _CC_SPECIAL_OTYPE(OTYPE_RESERVED_LAST, 3),
     /*
      * We allocate otypes subtracting from the maximum value, so the smallest is
      * actually the one with the largest _CC_SPECIAL_OTYPE() argument.
-     * With 16 reserved otypes, this is currently -16, i.e. 0x3fff0.
+     * With 4 reserved otypes, this is currently -4, i.e. 0x3fffc.
      */
     _CC_N(MIN_RESERVED_OTYPE) = _CC_N(OTYPE_RESERVED_LAST),
     _CC_N(MAX_RESERVED_OTYPE) = _CC_N(OTYPE_UNSEALED),
@@ -144,6 +159,8 @@ enum _CC_N(OTypes) {
     ITEM(OTYPE_INDIRECT_SENTRY, __VA_ARGS__)
 
 _CC_STATIC_ASSERT_SAME(CC128_MANTISSA_WIDTH, CC128_FIELD_EXP_ZERO_BOTTOM_SIZE);
+
+#define CC128_AP_FCTS AP_FCTS_NONE
 
 #include "cheri_compressed_cap_common.h"
 
