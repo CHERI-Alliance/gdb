@@ -84,6 +84,7 @@
 __extension__ typedef unsigned __int128 cc128m_length_t;
 __extension__ typedef signed __int128 cc128m_offset_t;
 typedef uint64_t cc128m_addr_t;
+typedef int64_t cc128m_saddr_t;
 #include "cheri_compressed_cap_macros.h"
 
 /* ignore ISO C restricts enumerator values to range of 'int' */
@@ -117,8 +118,23 @@ enum {
     _CC_FIELD(EXPONENT_HIGH_PART, 82, 80),
     _CC_FIELD(EXP_NONZERO_BOTTOM, 79, 67),
     _CC_FIELD(EXPONENT_LOW_PART, 66, 64),
+    /* The following fields are unused for the 128m format. */
+    _CC_FIELD(RESERVED2, 81, 82),
+    _CC_FIELD(SEALED, 81, 82),
+    _CC_FIELD(SDP, 81, 82),
+    _CC_FIELD(AP, 81, 82),
+    _CC_FIELD(EF, 81, 82),
+    _CC_FIELD(L8, 81, 82),
 };
 #pragma GCC diagnostic pop
+
+#define CC128M_FIELD_FLAGS_USED 0
+#define CC128M_FIELD_OTYPE_USED 1
+#define CC128M_FIELD_HWPERMS_USED 1
+/* TODO: review this, the definition and comment above aren't very clear... */
+#define CC128M_FIELD_UPERMS_USED 1
+#define CC128M_FIELD_EF_USED 0
+#define CC128M_FIELD_L8_USED 0
 
 #define CC128M_OTYPE_BITS CC128M_FIELD_OTYPE_SIZE
 #define CC128M_BOT_WIDTH CC128M_FIELD_EXP_ZERO_BOTTOM_SIZE
@@ -178,6 +194,8 @@ enum _CC_N(OTypes) {
     ITEM(OTYPE_LOAD_BRANCH, __VA_ARGS__)
 
 _CC_STATIC_ASSERT_SAME(CC128M_MANTISSA_WIDTH, CC128M_FIELD_EXP_ZERO_BOTTOM_SIZE);
+
+#define CC128M_AP_FCTS AP_FCTS_NONE
 
 #include "cheri_compressed_cap_common.h"
 
