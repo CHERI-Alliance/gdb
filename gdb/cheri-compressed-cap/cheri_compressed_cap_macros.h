@@ -43,6 +43,18 @@
 #endif
 #endif
 
+#if !defined(NDEBUG) && defined(__cplusplus) && defined(__EXCEPTIONS)
+#include <stdexcept>
+#define _cc_api_requirement(cond, msg)                                                                                 \
+    do {                                                                                                               \
+        if (!(cond)) {                                                                                                 \
+            throw std::invalid_argument(msg);                                                                          \
+        }                                                                                                              \
+    } while (false)
+#else
+#define _cc_api_requirement(cond, msg) _cc_debug_assert((cond) && msg)
+#endif
+
 #ifndef _CC_CONCAT
 #define _CC_CONCAT1(x, y) x##y
 #define _CC_CONCAT(x, y) _CC_CONCAT1(x, y)
@@ -95,5 +107,13 @@ template <size_t a, size_t b> static constexpr bool check_same() {
 #else
 #define _CC_STATIC_ASSERT_SAME(a, b) _Static_assert((a) == (b), "")
 #endif
+
+/*
+ * Select a set of functions for AP compression and decompression.
+ * (The numeric values have no meaning.)
+ */
+#define AP_FCTS_NONE  37
+#define AP_FCTS_IDENT 38
+#define AP_FCTS_QUADR 39
 
 #endif // _CC_CONCAT
