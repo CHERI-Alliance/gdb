@@ -4460,13 +4460,13 @@ riscv_cheriabi_write_pc (struct regcache *regcache, CORE_ADDR pc)
 	{
 	  cc128_cap_t cap;
 	  cc128_decompress_mem(pesbt, address, tag, &cap);
-	  tag = cc128_is_representable_with_addr(&cap, pc);
+	  tag = cc128_is_representable_with_addr(&cap, pc, false);
 	}
       else
 	{
 	  cc64_cap_t cap;
 	  cc64_decompress_mem(pesbt, address, tag, &cap);
-	  tag = cc64_is_representable_with_addr(&cap, pc);
+	  tag = cc64_is_representable_with_addr(&cap, pc, false);
 	}
       if (!tag)
 	regcache->raw_supply_tag (RISCV_PCC_REGNUM, tag);

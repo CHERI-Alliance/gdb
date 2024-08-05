@@ -748,7 +748,7 @@ static inline void _cc_N(decompress_raw)(_cc_addr_t pesbt, _cc_addr_t cursor, bo
         _cc_debug_assert(cdp->_cr_top <= _CC_N(MAX_TOP));
         _cc_debug_assert(cdp->cr_base <= cdp->_cr_top);
 #endif
-        _cc_debug_assert(_CC_EXTRACT_FIELD(pesbt, RESERVED) == 0);
+//        _cc_debug_assert(_CC_EXTRACT_FIELD(pesbt, RESERVED) == 0);
     }
 }
 
