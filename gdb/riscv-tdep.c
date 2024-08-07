@@ -4259,16 +4259,19 @@ riscv_cheri_print_compact_attributes (struct gdbarch *gdbarch, Cap *cap,
 				      struct ui_file *stream)
 {
   std::string perms ("");
-  if (cap->permissions () & CC128_PERM_LOAD)
-    perms += "r";
-  if (cap->permissions () & CC128_PERM_STORE)
-    perms += "w";
-  if (cap->permissions () & CC128_PERM_EXECUTE)
-    perms += "x";
-  if (cap->permissions () & CC128_PERM_LOAD_CAP)
-    perms += "R";
-  if (cap->permissions () & CC128_PERM_STORE_CAP)
+  if (cap->permissions () & CC128R_PERM_CAPABILITY)
+    perms += "C";
+  if (cap->permissions () & CC128R_PERM_WRITE)
     perms += "W";
+  if (cap->permissions () & CC128R_PERM_READ)
+    perms += "R";
+  if (cap->permissions () & CC128R_PERM_EXECUTE)
+    perms += "X";
+  if (cap->permissions () & CC128R_PERM_ASR)
+    perms += "A";
+  if (cap->permissions () & CC128R_PERM_MBIT)
+    perms += "M";
+
 
   std::string attr("");
   if (cap->cr_tag == 0)
@@ -4285,7 +4288,7 @@ riscv_cheri_print_compact_attributes (struct gdbarch *gdbarch, Cap *cap,
 	attr += ",";
       attr += "sealed";
     }
-  if (cap->permissions () & CC128_PERM_EXECUTE && cap->flags() == 1)
+  if (cap->permissions () & CC128R_PERM_EXECUTE && cap->flags() == 1)
     {
       if (!attr.empty ())
 	attr += ",";
@@ -4307,18 +4310,12 @@ riscv_cheri_print_compact_attributes (struct gdbarch *gdbarch, Cap *cap,
 
 static const char *cap_perms_strings[] =
 {
-  "Global",
-  "Execute",
-  "Load",
-  "Store",
-  "LoadCap",
-  "StoreCap",
-  "StoreLocalCap",
-  "Seal",
-  "CInvoke",
-  "Unseal",
-  "AccessSystemRegisters",
-  "SetCID"
+  "C-permission",
+  "W-permission",
+  "R-permission",
+  "X-permission",
+  "ASR-permission",
+  "M-bit",
 };
 
 static const char *cap_uperms_strings[] =
