@@ -24,56 +24,32 @@
    access permissions and to access the string representation
    of the permissions.
 
-   To access the global bit, for example, use (1 << cap_perms_global).
+   To access the C-permission bit, for example, use (1 << cap_perms_capability).
 
-   To print the global permission string, for example, use cap_perms_global as
+   To print the C-permission string, for example, use cap_perms_capability as
    a direct index into the cap_perms_strings array.
 */
 
 enum cap_perms
 {
-  cap_perms_global = 0,
-  cap_perms_executive,
-  cap_perms_user0,
-  cap_perms_user1,
-  cap_perms_user2,
-  cap_perms_user3,
-  cap_perms_mutable_load,
-  cap_perms_compartment_id,
-  cap_perms_branch_unseal,
-  cap_perms_system,
-  cap_perms_unseal,
-  cap_perms_seal,
-  cap_perms_store_local_cap,
-  cap_perms_store_cap,
-  cap_perms_load_cap,
+  cap_perms_capability = 0,
+  cap_perms_write,
+  cap_perms_read,
   cap_perms_execute,
-  cap_perms_store,
-  cap_perms_load
+  cap_perms_asr,
+  cap_perms_mbit,
 };
 
 /* Permission string names, indexed by bit number from permissions
    Valid bits are 0 through 17.  */
 static const char *cap_perms_strings[] =
 {
-  "Global",
-  "Executive",
-  "User0",
-  "User1",
-  "User2",
-  "User3",
-  "MutableLoad",
-  "CompartmentID",
-  "BranchUnseal",
-  "System",
-  "Unseal",
-  "Seal",
-  "StoreLocalCap",
-  "StoreCap",
-  "LoadCap",
-  "Execute",
-  "Store",
-  "Load"
+  "C-permission",
+  "W-permission",
+  "R-permission",
+  "X-permission",
+  "ASR-permission",
+  "M-bit",
 };
 
 /* Returns a capability, derived from the input capability, with base address
@@ -541,18 +517,18 @@ capability::metadata_str (void)
   std::string cap_str (" [");
 
   /* Handle compact permissions output.  */
-  if (check_permissions (1 << cap_perms_load))
-    cap_str += "r";
-  if (check_permissions (1 << cap_perms_store))
-    cap_str += "w";
-  if (check_permissions (1 << cap_perms_execute))
-    cap_str += "x";
-  if (check_permissions (1 << cap_perms_load_cap))
-    cap_str += "R";
-  if (check_permissions (1 << cap_perms_store_cap))
+  if (check_permissions (1 << cap_perms_capability))
+    cap_str += "C";
+  if (check_permissions (1 << cap_perms_write))
     cap_str += "W";
-  if (check_permissions (1 << cap_perms_executive))
-    cap_str += "E";
+  if (check_permissions (1 << cap_perms_read))
+    cap_str += "R";
+  if (check_permissions (1 << cap_perms_execute))
+    cap_str += "X";
+  if (check_permissions (1 << cap_perms_asr))
+    cap_str += "A";
+  if (check_permissions (1 << cap_perms_mbit))
+    cap_str += "M";
 
   /* Handle capability range.  */
   cap_str += ",";
@@ -631,7 +607,7 @@ capability::to_str (bool compact)
   /* Permissions.  */
   perm_str += "[";
 
-  for (int i = cap_perms_global; i <= cap_perms_load; i++)
+  for (int i = cap_perms_capability; i <= cap_perms_mbit; i++)
     if (check_permissions (1 << i))
       {
 	perm_str += " ";
