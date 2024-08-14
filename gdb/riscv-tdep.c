@@ -1718,7 +1718,6 @@ public:
       BGE,
       BLTU,
       BGEU,
-      JALR_CAP,
       /* These are needed for stepping over atomic sequences.  */
       LR,
       SC,
@@ -2024,8 +2023,6 @@ riscv_insn::decode (struct gdbarch *gdbarch, CORE_ADDR pc)
 	decode_b_type_insn (BLTU, ival);
       else if (is_bgeu_insn (ival))
 	decode_b_type_insn (BGEU, ival);
-      else if (is_jalr_cap_insn (ival))
-	decode_r_type_insn (JALR_CAP, ival);
       else if (is_lr_w_insn (ival))
 	decode_r_type_insn (LR, ival);
       else if (is_lr_d_insn (ival))
@@ -4086,7 +4083,8 @@ riscv_bfd_has_cheri (bfd *abfd)
 	    {
 	      obj_attribute *attr = elf_known_obj_attributes_proc (abfd);
 
-	      if (strstr(attr[Tag_RISCV_arch].s, "xcheri") != nullptr)
+	      if (   (strstr(attr[Tag_RISCV_arch].s, "zcherihybrid") != nullptr)
+            || (strstr(attr[Tag_RISCV_arch].s, "zcheripurecap") != nullptr))
 		return true;
 	    }
 	}
@@ -4501,7 +4499,10 @@ riscv_gcc_target_options (struct gdbarch *gdbarch)
   else
     target_options += "imac";
   if (isa_clen != 0)
-    target_options += "xcheri";
+    {
+      target_options += "zcherihybrid";
+      target_options += "zcheripurecap";
+    }
 
   target_options += " -mabi=";
   if (abi_clen == 128)
@@ -5008,13 +5009,6 @@ riscv_next_pc (struct regcache *regcache, CORE_ADDR pc)
     {
       if (tdep->syscall_next_pc != nullptr)
 	next_pc = tdep->syscall_next_pc (get_current_frame ());
-    }
-  else if (insn.opcode () == riscv_insn::JALR_CAP && riscv_has_cheri (gdbarch))
-    {
-      gdb_byte source[register_size (gdbarch, RISCV_CNULL_REGNUM)];
-      regcache->cooked_read (RISCV_CNULL_REGNUM + insn.rs1 (), source);
-      next_pc = extract_unsigned_integer (source, riscv_isa_xlen (gdbarch),
-					  gdbarch_byte_order (gdbarch));
     }
 
   return next_pc;

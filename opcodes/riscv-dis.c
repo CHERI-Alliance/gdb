@@ -548,6 +548,7 @@ print_insn_args (const char *oparg, insn_t l, bfd_vma pc, disassemble_info *info
 	  {
 	    static const char *riscv_csr_hash[4096]; /* Total 2^12 CSRs.  */
 	    static bool init_csr = false;
+		const char* capmode_csr_name = NULL;
 	    unsigned int csr = EXTRACT_OPERAND (CSR, l);
 
 	    if (!init_csr)
@@ -574,7 +575,18 @@ print_insn_args (const char *oparg, insn_t l, bfd_vma pc, disassemble_info *info
 #undef DECLARE_CSR_ALIAS
 	      }
 
-	    if (riscv_csr_hash[csr] != NULL)
+		if (capmode) {
+		    switch (csr)
+		      {
+#define DECLARE_CSR_CHERI(name, num) case num: capmode_csr_name = #name; break;
+#include "opcode/riscv-opc.h"
+#undef DECLARE_CSR_CHERI
+		      }
+		}
+
+		if (capmode_csr_name)
+		  print (info->stream, dis_style_register, "%s", capmode_csr_name);
+		else if (riscv_csr_hash[csr] != NULL)
 	      print (info->stream, dis_style_register, "%s",
 		     riscv_csr_hash[csr]);
 	    else
@@ -635,14 +647,6 @@ print_insn_args (const char *oparg, insn_t l, bfd_vma pc, disassemble_info *info
 		  goto undefined_modifier;
 		}
 	      break;
-	    default:
-	      goto undefined_modifier;
-	    }
-	  break;
-
-	case 'X': /* Vendor-specific operands.  */
-	  switch (*++oparg)
-	    {
 	    case 'C': /* CHERI */
 	      switch (*++oparg)
 		{
@@ -667,6 +671,8 @@ print_insn_args (const char *oparg, insn_t l, bfd_vma pc, disassemble_info *info
 		      print (info->stream, dis_style_register, "%s",
 			     riscv_gpcr_names[EXTRACT_OPERAND (CRS2, l)]);
 		      break;
+		    default:
+		      goto undefined_modifier;
 		    }
 		  break;
 		case 's':
@@ -681,48 +687,22 @@ print_insn_args (const char *oparg, insn_t l, bfd_vma pc, disassemble_info *info
 		  print (info->stream, dis_style_register, "%s",
 			 riscv_gpcr_names[rd]);
 		  break;
-		case 'D': /* 0 means DDC */
-		  {
-		    const char *reg_name = NULL;
-		    unsigned int reg = 0;
-		    switch (*++oparg)
-		      {
-		      case 's':
-			reg = rs1;
-			break;
-		      case 't':
-			reg = EXTRACT_OPERAND (RS2, l);
-			break;
-		      }
-		    if (reg == 0)
-		      reg_name = "ddc";
-		    else
-		      reg_name = riscv_gpcr_names[reg];
-		    print (info->stream, dis_style_register, "%s", reg_name);
-		    break;
-		  }
-		case 'E':
-		  {
-		    const char* scr_name = NULL;
-		    unsigned int scr = EXTRACT_OPERAND (SCR, l);
-		    switch (scr)
-		      {
-#define DECLARE_CHERI_SCR(name, num) case num: scr_name = #name; break;
-#include "opcode/riscv-opc.h"
-#undef DECLARE_CHERI_SCR
-		      }
-		    if (scr_name)
-		      print (info->stream, dis_style_register, "%s", scr_name);
-		    else
-		      print (info->stream, dis_style_immediate, "0x%x", scr);
-		    break;
-		  }
 		case 'I':
 		  print (info->stream, dis_style_immediate, "0x%x",
 			 (int) EXTRACT_OPERAND (IMM16, l) & 0xffff);
 		  break;
+		default:
+		  goto undefined_modifier;
 		}
 	      break;
+	    default:
+	      goto undefined_modifier;
+	    }
+	  break;
+
+	case 'X': /* Vendor-specific operands.  */
+	  switch (*++oparg)
+	    {
 	    case 't': /* Vendor-specific (T-head) operands.  */
 	      {
 		size_t n;

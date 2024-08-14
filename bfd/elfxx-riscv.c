@@ -1324,6 +1324,8 @@ static struct riscv_supported_ext riscv_supported_std_z_ext[] =
   {"zcb",		ISA_SPEC_CLASS_DRAFT,		1, 0,  0 },
   {"zcf",		ISA_SPEC_CLASS_DRAFT,		1, 0,  0 },
   {"zcd",		ISA_SPEC_CLASS_DRAFT,		1, 0,  0 },
+  {"zcheripurecap", ISA_SPEC_CLASS_DRAFT,		0, 8,  0 },
+  {"zcherihybrid", ISA_SPEC_CLASS_DRAFT,		0, 8,  0 },
   {NULL, 0, 0, 0, 0}
 };
 
@@ -2578,11 +2580,17 @@ riscv_multi_subset_supports (riscv_parse_subset_t *rps,
       return riscv_subset_supports (rps, "xtheadsync");
     case INSN_CLASS_XVENTANACONDOPS:
       return riscv_subset_supports (rps, "xventanacondops");
-    case INSN_CLASS_XCHERI:
-      return riscv_subset_supports (rps, "xcheri");
-    case INSN_CLASS_XCHERI_AND_A:
-      return (riscv_subset_supports (rps, "xcheri")
-	      && riscv_subset_supports (rps, "a"));
+    case INSN_CLASS_ZCHERI:
+      return riscv_subset_supports (rps, "zcheripurecap")
+        || riscv_subset_supports (rps, "zcherihybrid");
+    case INSN_CLASS_ZCHERI_AND_A:
+      return ((riscv_subset_supports (rps, "zcheripurecap")
+        || riscv_subset_supports (rps, "zcherihybrid"))
+	     && riscv_subset_supports (rps, "a"));
+    case INSN_CLASS_ZCHERI_AND_C:
+      return ((riscv_subset_supports (rps, "zcheripurecap")
+        || riscv_subset_supports (rps, "zcherihybrid"))
+	     && riscv_subset_supports (rps, "c"));
     default:
       rps->error_handler
         (_("internal: unreachable INSN_CLASS_*"));
@@ -2649,7 +2657,7 @@ riscv_multi_subset_supports_ext (riscv_parse_subset_t *rps,
 	{
 	  if (!riscv_subset_supports (rps, "c")
 	      && !riscv_subset_supports (rps, "zcf"))
-	    return _("f' and `c', or `f' and `zcf"); 
+	    return _("f' and `c', or `f' and `zcf");
 	  else
 	    return "f";
 	}
@@ -2821,16 +2829,24 @@ riscv_multi_subset_supports_ext (riscv_parse_subset_t *rps,
       return "xtheadmempair";
     case INSN_CLASS_XTHEADSYNC:
       return "xtheadsync";
-    case INSN_CLASS_XCHERI:
-      return "xcheri";
-    case INSN_CLASS_XCHERI_AND_A:
-      if (!riscv_subset_supports (rps, "xcheri")
+    case INSN_CLASS_ZCHERI:
+      return _("zcheripurecap' or `zcherihybrid");
+    case INSN_CLASS_ZCHERI_AND_A:
+      if (!(riscv_subset_supports (rps, "zcheripurecap") || riscv_subset_supports (rps, "zcherihybrid"))
 	  && !riscv_subset_supports (rps, "a"))
-	return "xcheri' and `a";
-      else if (!riscv_subset_supports (rps, "xcheri"))
-	return "xcheri";
+	return _("zcheripurecap' and `a', or `zcherihybrid' and `a");
+      else if (!(riscv_subset_supports (rps, "zcheripurecap") || riscv_subset_supports (rps, "zcherihybrid")))
+	return _("zcheripurecap' or `zcherihybrid");
       else
 	return "a";
+    case INSN_CLASS_ZCHERI_AND_C:
+      if (!(riscv_subset_supports (rps, "zcheripurecap") || riscv_subset_supports (rps, "zcherihybrid"))
+	  && !riscv_subset_supports (rps, "c"))
+	return _("zcheripurecap' and `c', or `zcherihybrid' and `c");
+      else if (!(riscv_subset_supports (rps, "zcheripurecap") || riscv_subset_supports (rps, "zcherihybrid")))
+	return _("zcheripurecap' or `zcherihybrid");
+      else
+	return "c";
     default:
       rps->error_handler
         (_("internal: unreachable INSN_CLASS_*"));

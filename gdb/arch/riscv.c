@@ -65,7 +65,10 @@ riscv_create_target_description (const struct riscv_gdbarch_features features)
     arch_name.append ("q");
 
   if (features.clen != 0)
-    arch_name.append ("xcheri");
+    {
+      arch_name.append ("zcherihybrid");
+      arch_name.append ("zcheripurecap");
+    }
 
   set_tdesc_architecture (tdesc.get (), arch_name.c_str ());
 #endif
