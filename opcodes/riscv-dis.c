@@ -73,10 +73,9 @@ struct riscv_private_data
   /* If set, disassemble without checking architecture string, just like what
      we did at the beginning.  */
   bool all_ext;
+  /* If true, use capability mode.  */
+  bool capmode;
 };
-
-/* If true, use capability mode for disassembly.  */
-static bool capmode = false;
 
 /* Set default RISC-V disassembler options.  */
 
@@ -89,7 +88,7 @@ set_default_riscv_dis_options (struct disassemble_info *info)
   pd->riscv_gpcr_names = riscv_gpcr_names_abi;
   pd->no_aliases = false;
   pd->all_ext = false;
-  capmode = false;
+  pd->capmode = false;
 }
 
 /* Parse RISC-V disassembler option (without arguments).  */
@@ -113,13 +112,13 @@ parse_riscv_dis_option_without_args (const char *option,
     {
       riscv_update_subset (&pd->riscv_rps_dis, "+zcheripurecap");
       riscv_update_subset (&pd->riscv_rps_dis, "+zcherihybrid");
-      capmode = false;
+      pd->capmode = false;
     }
   else if (strcmp (option, "cheri-purecap") == 0)
     {
       riscv_update_subset (&pd->riscv_rps_dis, "+zcheripurecap");
       riscv_update_subset (&pd->riscv_rps_dis, "+zcherihybrid");
-      capmode = true;
+      pd->capmode = true;
     }
   else
     return false;
@@ -655,6 +654,7 @@ print_insn_args (const char *oparg, insn_t l, bfd_vma pc, disassemble_info *info
 	  {
 	    static const char *riscv_csr_hash[4096]; /* Total 2^12 CSRs.  */
 	    static bool init_csr = false;
+		const char* capmode_csr_name = NULL;
 	    unsigned int csr = EXTRACT_OPERAND (CSR, l);
 
 	    if (!init_csr)
@@ -681,7 +681,18 @@ print_insn_args (const char *oparg, insn_t l, bfd_vma pc, disassemble_info *info
 #undef DECLARE_CSR_ALIAS
 	      }
 
-	    if (riscv_csr_hash[csr] != NULL)
+		if (pd->capmode) {
+		    switch (csr)
+		      {
+#define DECLARE_CSR_CHERI(name, num) case num: capmode_csr_name = #name; break;
+#include "opcode/riscv-opc.h"
+#undef DECLARE_CSR_CHERI
+		      }
+		}
+
+		if (capmode_csr_name)
+		  print (info->stream, dis_style_register, "%s", capmode_csr_name);
+		else if (riscv_csr_hash[csr] != NULL)
 	      if (riscv_subset_supports (&pd->riscv_rps_dis, "xtheadvector")
 		  && (csr == CSR_VSTART
 		      || csr == CSR_VXSAT
@@ -756,30 +767,10 @@ print_insn_args (const char *oparg, insn_t l, bfd_vma pc, disassemble_info *info
 		  print (info->stream, dis_style_immediate, "%d",
 			 (int)EXTRACT_ZCB_HALFWORD_UIMM (l));
 		  break;
-		case 'r':
-		  print_reg_list (info, l);
-		  break;
-		case 'p':
-		  print (info->stream, dis_style_immediate, "%d",
-			 riscv_get_spimm (l, pd->xlen));
-		  break;
-		case 'i':
-		case 'I':
-		  print (info->stream, dis_style_address_offset,
-			 "%" PRIu64, EXTRACT_ZCMT_INDEX (l));
-		  break;
 		default:
 		  goto undefined_modifier;
 		}
 	      break;
-	    default:
-	      goto undefined_modifier;
-	    }
-	  break;
-
-	case 'X': /* Vendor-specific operands.  */
-	  switch (*++oparg)
-	    {
 	    case 'C': /* CHERI */
 	      switch (*++oparg)
 		{
@@ -804,6 +795,8 @@ print_insn_args (const char *oparg, insn_t l, bfd_vma pc, disassemble_info *info
 		      print (info->stream, dis_style_register, "%s",
 			     pd->riscv_gpcr_names[EXTRACT_OPERAND (CRS2, l)]);
 		      break;
+		    default:
+		      goto undefined_modifier;
 		    }
 		  break;
 		case 's':
@@ -818,48 +811,22 @@ print_insn_args (const char *oparg, insn_t l, bfd_vma pc, disassemble_info *info
 		  print (info->stream, dis_style_register, "%s",
 			 pd->riscv_gpcr_names[rd]);
 		  break;
-		case 'D': /* 0 means DDC */
-		  {
-		    const char *reg_name = NULL;
-		    unsigned int reg = 0;
-		    switch (*++oparg)
-		      {
-		      case 's':
-			reg = rs1;
-			break;
-		      case 't':
-			reg = EXTRACT_OPERAND (RS2, l);
-			break;
-		      }
-		    if (reg == 0)
-		      reg_name = "ddc";
-		    else
-		      reg_name = pd->riscv_gpcr_names[reg];
-		    print (info->stream, dis_style_register, "%s", reg_name);
-		    break;
-		  }
-		case 'E':
-		  {
-		    const char* scr_name = NULL;
-		    unsigned int scr = EXTRACT_OPERAND (SCR, l);
-		    switch (scr)
-		      {
-#define DECLARE_CHERI_SCR(name, num) case num: scr_name = #name; break;
-#include "opcode/riscv-opc.h"
-#undef DECLARE_CHERI_SCR
-		      }
-		    if (scr_name)
-		      print (info->stream, dis_style_register, "%s", scr_name);
-		    else
-		      print (info->stream, dis_style_immediate, "0x%x", scr);
-		    break;
-		  }
 		case 'I':
 		  print (info->stream, dis_style_immediate, "0x%x",
 			 (int) EXTRACT_OPERAND (IMM16, l) & 0xffff);
 		  break;
+		default:
+		  goto undefined_modifier;
 		}
 	      break;
+	    default:
+	      goto undefined_modifier;
+	    }
+	  break;
+
+	case 'X': /* Vendor-specific operands.  */
+	  switch (*++oparg)
+	    {
 	    case 't': /* Vendor-specific (T-head) operands.  */
 	      {
 		size_t n;
@@ -1051,7 +1018,7 @@ riscv_disassemble_insn (bfd_vma memaddr,
   struct riscv_private_data *pd = info->private_data;
   int insnlen, i;
   bool printed;
-  bool use_capmode = capmode;
+  bool use_capmode = pd->capmode;
 
 #define OP_HASH_IDX(i) ((i) & (riscv_insn_length (i) == 2 ? 0x3 : OP_MASK_OP))
 
@@ -1581,9 +1548,13 @@ riscv_init_disasm_info (struct disassemble_info *info)
 	      pd->default_arch = attr[Tag_RISCV_arch].s;
 	    }
 	  if (elf_elfheader (abfd)->e_flags & EF_RISCV_CAPMODE)
-	    capmode = true;
+	    pd->capmode = true;
 	}
     }
+
+  /* Save ELF-derived capmode before calling set_default_riscv_dis_options,
+     which resets pd->capmode to false.  */
+  bool elf_capmode = pd->capmode;
 
   pd->last_map_symbol = -1;
   pd->last_stop_offset = 0;
@@ -1597,6 +1568,13 @@ riscv_init_disasm_info (struct disassemble_info *info)
   pd->all_ext = false;
 
   info->private_data = pd;
+  set_default_riscv_dis_options (info);
+  if (elf_capmode)
+    {
+      pd->capmode = true;
+      riscv_update_subset (&pd->riscv_rps_dis, "+zcheripurecap");
+      riscv_update_subset (&pd->riscv_rps_dis, "+zcherihybrid");
+    }
   riscv_dis_parse_subset (info, pd->default_arch);
   return true;
 }

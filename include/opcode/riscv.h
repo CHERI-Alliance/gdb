@@ -618,8 +618,9 @@ enum riscv_insn_class
   INSN_CLASS_XMIPSCMOV,
   INSN_CLASS_XMIPSEXECTL,
   INSN_CLASS_XMIPSLSP,
-  INSN_CLASS_XCHERI,
-  INSN_CLASS_XCHERI_AND_A,
+  INSN_CLASS_ZCHERI,
+  INSN_CLASS_ZCHERI_AND_A,
+  INSN_CLASS_ZCHERI_AND_C,
 };
 
 /* This structure holds information for a particular instruction.  */
