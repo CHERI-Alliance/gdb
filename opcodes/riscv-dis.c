@@ -89,6 +89,7 @@ set_default_riscv_dis_options (struct disassemble_info *info)
   pd->riscv_gpcr_names = riscv_gpcr_names_abi;
   pd->no_aliases = false;
   pd->all_ext = false;
+  capmode = false;
 }
 
 /* Parse RISC-V disassembler option (without arguments).  */
@@ -108,6 +109,18 @@ parse_riscv_dis_option_without_args (const char *option,
     }
   else if (strcmp (option, "max") == 0)
     pd->all_ext = true;
+  else if (strcmp (option, "cheri-integer") == 0)
+    {
+      riscv_update_subset (&pd->riscv_rps_dis, "+zcheripurecap");
+      riscv_update_subset (&pd->riscv_rps_dis, "+zcherihybrid");
+      capmode = false;
+    }
+  else if (strcmp (option, "cheri-purecap") == 0)
+    {
+      riscv_update_subset (&pd->riscv_rps_dis, "+zcheripurecap");
+      riscv_update_subset (&pd->riscv_rps_dis, "+zcherihybrid");
+      capmode = true;
+    }
   else
     return false;
   return true;
@@ -1739,6 +1752,12 @@ static const struct
     RISCV_OPTION_ARG_NONE },
   { "no-aliases",
     N_("Disassemble only into canonical instructions."),
+    RISCV_OPTION_ARG_NONE },
+  { "cheri-integer",
+    N_("Disassemble cheri instruction in integer pointer mode."),
+    RISCV_OPTION_ARG_NONE },
+  { "cheri-purecap",
+    N_("Disassemble cheri instruction in capability pointer mode."),
     RISCV_OPTION_ARG_NONE },
   { "priv-spec=",
     N_("Print the CSR according to the chosen privilege spec."),
