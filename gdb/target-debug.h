@@ -245,6 +245,10 @@ target_debug_print_record_method (record_method method)
 { return plongest (method); }
 
 static std::string
+target_debug_print_regex_t_p (regex_t *p)
+{ return host_address_to_string (p); }
+
+static std::string
 target_debug_print_const_btrace_config_p (const btrace_config *config)
 { return host_address_to_string (config); }
 
