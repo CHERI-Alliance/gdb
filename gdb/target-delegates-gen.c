@@ -630,11 +630,11 @@ dummy_target::gots_info (regex_t *arg0)
 void
 debug_target::gots_info (regex_t *arg0)
 {
-  gdb_printf (gdb_stdlog, "-> %s->gots_info (...)\n", this->beneath ()->shortname ());
+  target_debug_printf_nofunc ("-> %s->gots_info (...)", this->beneath ()->shortname ());
   this->beneath ()->gots_info (arg0);
-  gdb_printf (gdb_stdlog, "<- %s->gots_info (", this->beneath ()->shortname ());
-  target_debug_print_regex_t_p (arg0);
-  gdb_puts (")\n", gdb_stdlog);
+  target_debug_printf_nofunc ("<- %s->gots_info (%s)",
+	      this->beneath ()->shortname (),
+	      target_debug_print_regex_t_p (arg0).c_str ());
 }
 
 int
@@ -4556,7 +4556,7 @@ target_ops::read_capability (CORE_ADDR arg0)
 gdb::byte_vector
 dummy_target::read_capability (CORE_ADDR arg0)
 {
-  tcomplain ();
+  return gdb::byte_vector ();
 }
 
 gdb::byte_vector
@@ -4581,7 +4581,7 @@ target_ops::write_capability (CORE_ADDR arg0, gdb::array_view<const gdb_byte> ar
 bool
 dummy_target::write_capability (CORE_ADDR arg0, gdb::array_view<const gdb_byte> arg1)
 {
-  tcomplain ();
+  return false;
 }
 
 bool
