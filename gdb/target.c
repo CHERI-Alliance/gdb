@@ -2476,8 +2476,6 @@ info_gots_command (const char *args, int from_tty)
 	continue;
 
       t->gots_info (args != nullptr ? &regex : nullptr);
-      if (t->has_all_memory ())
-	break;
     }
 }
 
