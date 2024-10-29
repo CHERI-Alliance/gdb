@@ -964,6 +964,7 @@ void
 core_target::gots_info (regex_t *pattern)
 {
   print_got_info (&m_core_section_table, pattern);
+  this->beneath ()->gots_info (pattern);
 }
 
 /* Helper method for core_target::xfer_partial.  */

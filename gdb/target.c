@@ -2462,28 +2462,21 @@ private:
 static void
 info_gots_command (const char *args, int from_tty)
 {
-  regex_t regex;
-  regex_free regex_free;
+  target_ops *t = current_inferior ()->top_target ();
 
   if (args != nullptr)
     {
+      regex_t regex;
+      regex_free regex_free;
+
       if (regcomp (&regex, args, REG_EXTENDED) != 0)
 	error (_("Invalid pattern"));
       regex_free.set (&regex);
+
+      t->gots_info (&regex);
     }
-
-  for (target_ops *t = current_inferior ()->top_target ();
-       t != NULL;
-       t = t->beneath ())
-    {
-      if (!t->has_memory ())
-	continue;
-
-      if ((int) (t->stratum ()) <= (int) dummy_stratum)
-	continue;
-
-      t->gots_info (args != nullptr ? &regex : nullptr);
-    }
+  else
+      t->gots_info (nullptr);
 }
 
 /* This function is called before any new inferior is created, e.g.

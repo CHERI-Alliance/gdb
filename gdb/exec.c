@@ -997,8 +997,7 @@ exec_target::gots_info (regex_t *pattern)
 {
   if (current_program_space->exec_bfd ())
     print_got_info (&current_program_space->target_sections (), pattern);
-  else
-    gdb_puts (_("\t<no file loaded>\n"));
+  this->beneath ()->gots_info (pattern);
 }
 
 static void
