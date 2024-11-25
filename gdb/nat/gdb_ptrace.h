@@ -139,7 +139,7 @@
 #else
 /* Wrapper that avoids adding a pointless cast to all callers.  */
 # define ptrace(request, pid, addr, data) \
-	 ptrace ((PTRACE_TYPE_ARG1) request, pid, addr, data)
+	 ptrace ((PTRACE_TYPE_ARG1) request, pid, (PTRACE_TYPE_ARG3)addr, (PTRACE_TYPE_ARG4)data)
 #endif
 
 #endif /* NAT_GDB_PTRACE_H */

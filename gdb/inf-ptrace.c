@@ -281,7 +281,7 @@ inf_ptrace_target::resume (ptid_t ptid, int step, enum gdb_signal signal)
      where it was.  If GDB wanted it to start some other way, we have
      already written a new program counter value to the child.  */
   errno = 0;
-  gdb_ptrace (request, ptid, (PTRACE_TYPE_ARG3)1, gdb_signal_to_host (signal));
+  gdb_ptrace (request, ptid, (PTRACE_TYPE_ARG3)1, (PTRACE_TYPE_ARG4)gdb_signal_to_host (signal));
   if (errno != 0)
     perror_with_name (("ptrace"));
 }
@@ -401,14 +401,14 @@ inf_ptrace_peek_poke (ptid_t ptid, gdb_byte *readbuf,
 	  memcpy (buf.byte + skip, writebuf + n, chunk);
 	  errno = 0;
 	  gdb_ptrace (PT_WRITE_D, ptid, (PTRACE_TYPE_ARG3)(uintptr_t) addr,
-		  buf.word);
+		  (PTRACE_TYPE_ARG4)buf.word);
 	  if (errno != 0)
 	    {
 	      /* Using the appropriate one (I or D) is necessary for
 		 Gould NP1, at least.  */
 	      errno = 0;
 	      gdb_ptrace (PT_WRITE_I, ptid, (PTRACE_TYPE_ARG3)(uintptr_t) addr,
-			  buf.word);
+			  (PTRACE_TYPE_ARG4)buf.word);
 	      if (errno != 0)
 		break;
 	    }

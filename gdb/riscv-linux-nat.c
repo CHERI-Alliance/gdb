@@ -27,7 +27,7 @@
 
 #include "nat/riscv-linux-tdesc.h"
 
-#include <sys/ptrace.h>
+#include "nat/gdb_ptrace.h"
 
 /* Work around glibc header breakage causing ELF_NFPREG not to be usable.  */
 #ifndef NFPREG
