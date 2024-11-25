@@ -2032,7 +2032,7 @@ static reg_errcode_t byte_compile_range (unsigned int range_start,
 	SET_HIGH_BOUND (pending_exact);		\
     }
 #  else
-#   define MOVE_BUFFER_POINTER(P) (P) += incr
+#   define MOVE_BUFFER_POINTER(P) do { (P) = (void *)COMPILED_BUFFER_VAR + ((void *)(P) + incr - (void *)COMPILED_BUFFER_VAR); } while (0)
 #   define ELSE_EXTEND_BUFFER_HIGH_BOUND
 #  endif
 # endif /* not DEFINED_ONCE */
