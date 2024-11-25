@@ -77,7 +77,11 @@ backtrace_get_view (struct backtrace_state *state ATTRIBUTE_UNUSED,
   size += inpage;
   size = (size + (pagesize - 1)) & ~ (pagesize - 1);
 
-  map = mmap (NULL, size, PROT_READ, MAP_PRIVATE, descriptor, pageoff);
+  /*
+   * On free the allocator might want to put the block into the free list.
+   * This requires the block to be writable.
+   */
+  map = mmap (NULL, size, PROT_READ | PROT_WRITE, MAP_PRIVATE, descriptor, pageoff);
   if (map == MAP_FAILED)
     {
       error_callback (data, "mmap", errno);
@@ -99,12 +103,6 @@ backtrace_release_view (struct backtrace_state *state ATTRIBUTE_UNUSED,
 			backtrace_error_callback error_callback,
 			void *data)
 {
-  union {
-    const void *cv;
-    void *v;
-  } const_cast;
-
-  const_cast.cv = view->base;
-  if (munmap (const_cast.v, view->len) < 0)
+  if (munmap (view->base, view->len) < 0)
     error_callback (data, "munmap", errno);
 }

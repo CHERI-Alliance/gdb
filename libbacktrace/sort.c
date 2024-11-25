@@ -45,15 +45,41 @@ POSSIBILITY OF SUCH DAMAGE.  */
 static void
 swap (char *a, char *b, size_t size)
 {
-  size_t i;
+  unsigned long aa = (unsigned long)(uintptr_t)a;
+  unsigned long bb = (unsigned long)(uintptr_t)b;
 
-  for (i = 0; i < size; i++, a++, b++)
+  if (aa % __SIZEOF_POINTER__ == bb % __SIZEOF_POINTER__)
+    {
+      while (((unsigned long)(uintptr_t)a) % __SIZEOF_POINTER__ != 0 && size != 0)
+	{
+	  char t;
+
+	  t = *a;
+	  *a = *b;
+	  *b = t;
+	  a++; b++; size--;
+	}
+      while (size >= __SIZEOF_POINTER__)
+	{
+	  void *t;
+
+	  t = *(void **)a;
+	  *(void **)a = *(void **)b;
+	  *(void **)b = t;
+	  a += __SIZEOF_POINTER__;
+	  b += __SIZEOF_POINTER__;
+	  size -= __SIZEOF_POINTER__;
+	}
+    }
+
+  while (size != 0)
     {
       char t;
 
       t = *a;
       *a = *b;
       *b = t;
+      a++; b++; size--;
     }
 }
 
