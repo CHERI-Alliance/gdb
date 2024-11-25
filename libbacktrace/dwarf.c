@@ -228,7 +228,7 @@ struct line_header_format
 struct line
 {
   /* PC.  */
-  uintptr_t pc;
+  uintptr_t pc, pcend;
   /* File name.  Many entries in the array are expected to point to
      the same file name.  */
   const char *filename;
@@ -1183,7 +1183,7 @@ function_addrs_search (const void *vkey, const void *ventry)
   pc = *key;
   if (pc < entry->low)
     return -1;
-  else if (pc > (entry + 1)->low)
+  else if (pc >= entry->high)
     return 1;
   else
     return 0;
@@ -1270,7 +1270,7 @@ unit_addrs_search (const void *vkey, const void *ventry)
   pc = *key;
   if (pc < entry->low)
     return -1;
-  else if (pc > (entry + 1)->low)
+  else if (pc >= entry->high)
     return 1;
   else
     return 0;
@@ -1314,7 +1314,7 @@ line_search (const void *vkey, const void *ventry)
   pc = *key;
   if (pc < entry->pc)
     return -1;
-  else if (pc >= (entry + 1)->pc)
+  else if (pc >= entry->pcend)
     return 1;
   else
     return 0;
@@ -2975,6 +2975,7 @@ read_line_info (struct backtrace_state *state, struct dwarf_data *ddata,
   if (ln == NULL)
     goto fail;
   ln->pc = (uintptr_t) -1;
+  ln->pcend = (uintptr_t) -1;
   ln->filename = NULL;
   ln->lineno = 0;
   ln->idx = 0;
@@ -2984,6 +2985,8 @@ read_line_info (struct backtrace_state *state, struct dwarf_data *ddata,
 
   ln = (struct line *) vec.vec.base;
   backtrace_qsort (ln, vec.count, sizeof (struct line), line_compare);
+  for (unsigned int i = 0; i < vec.count - 1; ++i)
+    ln[i].pcend = ln[i+1].pc;
 
   *lines = ln;
   *lines_count = vec.count;

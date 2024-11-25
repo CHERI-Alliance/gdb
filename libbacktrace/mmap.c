@@ -146,8 +146,8 @@ backtrace_alloc (struct backtrace_state *state,
 	      *pp = p->next;
 
 	      /* Round for alignment; we assume that no type we care about
-		 is more than 8 bytes.  */
-	      size = (size + 7) & ~ (size_t) 7;
+		 is more than 16 bytes.  */
+	      size = (size + 15) & ~ (size_t) 15;
 	      if (size < p->size)
 		backtrace_free_locked (state, (char *) p + size,
 				       p->size - size);
@@ -177,7 +177,7 @@ backtrace_alloc (struct backtrace_state *state,
 	}
       else
 	{
-	  size = (size + 7) & ~ (size_t) 7;
+	  size = (size + 15) & ~ (size_t) 15;
 	  if (size < asksize)
 	    backtrace_free (state, (char *) page + size, asksize - size,
 			    error_callback, data);
@@ -319,7 +319,7 @@ backtrace_vector_release (struct backtrace_state *state,
      boundary.  */
   size = vec->size;
   alc = vec->alc;
-  aligned = (size + 7) & ~ (size_t) 7;
+  aligned = (size + 15) & ~ (size_t) 15;
   alc -= aligned - size;
 
   backtrace_free (state, (char *) vec->base + aligned, alc,
