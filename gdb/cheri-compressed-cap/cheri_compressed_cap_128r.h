@@ -1,6 +1,5 @@
 /*-
  * SPDX-License-Identifier: BSD-2-Clause
- * TODO: Is this license ok?
  *
  * Copyright (c) 2024 Codasip
  *
@@ -46,9 +45,11 @@ typedef int64_t cc128r_saddr_t;
 enum {
     _CC_FIELD(RESERVED2, 127, 121),
     _CC_FIELD(SDP, 120, 117),
-    _CC_FIELD(AP, 116, 111),
-    _CC_FIELD(RESERVED, 110, 92),
-    _CC_FIELD(SEALED, 91, 91),
+    _CC_FIELD(M, 116, 116),
+    _CC_FIELD(AP, 115, 108),
+    _CC_FIELD(CL, 107, 107),
+    _CC_FIELD(RESERVED, 106, 92),
+    _CC_FIELD(CT, 91, 91),
     _CC_FIELD(EBT, 90, 64),
 
     _CC_FIELD(EF, 90, 90),
@@ -75,26 +76,32 @@ enum {
 };
 #pragma GCC diagnostic pop
 
+#define CC128R_FIELD_M_USED 1
 #define CC128R_FIELD_FLAGS_USED 0
 #define CC128R_FIELD_OTYPE_USED 0
 #define CC128R_FIELD_HWPERMS_USED 0
 #define CC128R_FIELD_UPERMS_USED 0
 #define CC128R_FIELD_EF_USED 1
 #define CC128R_FIELD_L8_USED 0
+#define CC128R_FIELD_CL_USED 1
 
 #define CC128R_OTYPE_BITS CC128R_FIELD_OTYPE_SIZE
 #define CC128R_BOT_WIDTH CC128R_FIELD_EXP_ZERO_BOTTOM_SIZE
 #define CC128R_BOT_INTERNAL_EXP_WIDTH CC128R_FIELD_EXP_NONZERO_BOTTOM_SIZE
 #define CC128R_EXP_LOW_WIDTH CC128R_FIELD_EXPONENT_LOW_PART_SIZE
 
-#define CC128R_PERM_CAPABILITY (1 << 0)
-#define CC128R_PERM_WRITE (1 << 1)
-#define CC128R_PERM_READ (1 << 2)
-#define CC128R_PERM_EXECUTE (1 << 3)
-#define CC128R_PERM_ASR (1 << 4)
-#define CC128R_PERM_MBIT (1 << 5)
-
-#define CC128_HIGHEST_PERM CC128R_PERM_MBIT
+#define CC128R_PERM_GLOBAL (1 << 0)
+#define CC128R_PERM_EXECUTE (1 << 1)
+#define CC128R_PERM_LOAD (1 << 2)
+#define CC128R_PERM_STORE (1 << 3)
+#define CC128R_PERM_LOAD_CAP (1 << 4)
+#define CC128R_PERM_STORE_CAP (1 << 5)
+#define CC128R_PERM_STORE_LOCAL (1 << 6)
+#define CC128R_PERM_SEAL (1 << 7)
+#define CC128R_PERM_CINVOKE (1 << 8)
+#define CC128R_PERM_UNSEAL (1 << 9)
+#define CC128R_PERM_ACCESS_SYS_REGS (1 << 10)
+#define CC128R_PERM_SETCID (1 << 11)
 
 #define CC128R_PERMS_ALL       (0)
 #define CC128R_UPERMS_ALL      (0)
@@ -135,7 +142,7 @@ enum _CC_N(OTypes) {
 
 _CC_STATIC_ASSERT_SAME(CC128R_MANTISSA_WIDTH, CC128R_FIELD_EXP_ZERO_BOTTOM_SIZE);
 
-#define CC128R_AP_FCTS AP_FCTS_IDENT
+#define CC128R_M_AP_FCTS M_AP_FCTS_IDENT
 
 #include "cheri_compressed_cap_common.h"
 

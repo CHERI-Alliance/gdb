@@ -87,10 +87,12 @@ enum {
     _CC_FIELD(EXP_NONZERO_BOTTOM, 39, 35),
     _CC_FIELD(EXPONENT_LOW_PART, 34, 32),
     /* The following fields are unused for the 64 format. */
+    _CC_FIELD(CL, 31, 32),
+    _CC_FIELD(M, 31, 32),
     _CC_FIELD(UPERMS, 31, 32),
     _CC_FIELD(RESERVED, 31, 32),
     _CC_FIELD(RESERVED2, 31, 32),
-    _CC_FIELD(SEALED, 31, 32),
+    _CC_FIELD(CT, 31, 32),
     _CC_FIELD(SDP, 31, 32),
     _CC_FIELD(AP, 31, 32),
     _CC_FIELD(EF, 31, 32),
@@ -98,12 +100,14 @@ enum {
 };
 #pragma GCC diagnostic pop
 
+#define CC64_FIELD_M_USED 0
 #define CC64_FIELD_FLAGS_USED 1
 #define CC64_FIELD_OTYPE_USED 1
 #define CC64_FIELD_HWPERMS_USED 1
 #define CC64_FIELD_UPERMS_USED 1
 #define CC64_FIELD_EF_USED 0
 #define CC64_FIELD_L8_USED 0
+#define CC64_FIELD_CL_USED 0
 
 _CC_STATIC_ASSERT_SAME(CC64_FIELD_UPERMS_SIZE, 0);
 _CC_STATIC_ASSERT_SAME(CC64_FIELD_RESERVED_SIZE, 0);
@@ -149,7 +153,7 @@ enum _CC_N(OTypes) {
 
 _CC_STATIC_ASSERT_SAME(CC64_MANTISSA_WIDTH, CC64_FIELD_EXP_ZERO_BOTTOM_SIZE);
 
-#define CC64_AP_FCTS AP_FCTS_NONE
+#define CC64_M_AP_FCTS M_AP_FCTS_NONE
 
 #include "cheri_compressed_cap_common.h"
 

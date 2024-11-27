@@ -1,6 +1,5 @@
 /*-
  * SPDX-License-Identifier: BSD-2-Clause
- * TODO: Is this license ok?
  *
  * Copyright (c) 2024 Codasip
  *
@@ -45,8 +44,9 @@ typedef int32_t cc64r_saddr_t;
 enum {
     _CC_FIELD(SDP, 63, 62),
     _CC_FIELD(AP, 61, 57),
-    _CC_FIELD(RESERVED, 56, 53),
-    _CC_FIELD(SEALED, 52, 52),
+    _CC_FIELD(CL, 56, 56),
+    _CC_FIELD(RESERVED, 55, 53),
+    _CC_FIELD(CT, 52, 52),
     _CC_FIELD(EBT, 51, 32),
 
     _CC_FIELD(EF, 51, 51),
@@ -66,6 +66,7 @@ enum {
     _CC_FIELD(EXPONENT_LOW_PART, 33, 32),
 
     /* The following fields are unused for the 64r format. */
+    _CC_FIELD(M, 31, 32),
     _CC_FIELD(INTERNAL_EXPONENT, 31, 32),
     _CC_FIELD(OTYPE, 31, 32),
     _CC_FIELD(FLAGS, 31, 32),
@@ -77,12 +78,14 @@ enum {
 
 _CC_STATIC_ASSERT_SAME(CC64R_FIELD_UPERMS_SIZE, 0);
 
+#define CC64R_FIELD_M_USED 0
 #define CC64R_FIELD_FLAGS_USED 0
 #define CC64R_FIELD_OTYPE_USED 0
 #define CC64R_FIELD_HWPERMS_USED 0
 #define CC64R_FIELD_UPERMS_USED 0
 #define CC64R_FIELD_L8_USED 1
 #define CC64R_FIELD_EF_USED 1
+#define CC64R_FIELD_CL_USED 1
 
 #define CC64R_OTYPE_BITS CC64R_FIELD_OTYPE_SIZE
 #define CC64R_BOT_WIDTH CC64R_FIELD_EXP_ZERO_BOTTOM_SIZE
@@ -127,7 +130,7 @@ enum _CC_N(OTypes) {
 
 _CC_STATIC_ASSERT_SAME(CC64R_MANTISSA_WIDTH, CC64R_FIELD_EXP_ZERO_BOTTOM_SIZE);
 
-#define CC64R_AP_FCTS AP_FCTS_QUADR
+#define CC64R_M_AP_FCTS M_AP_FCTS_QUADR
 
 #include "cheri_compressed_cap_common.h"
 
