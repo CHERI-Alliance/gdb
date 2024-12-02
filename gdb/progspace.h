@@ -379,7 +379,7 @@ struct program_space
   unsigned int compart_generation = UINT_MAX;
 
   /* List of compartments in this space.  Managed by comparts.c.  */
-  compart_list compart_list;
+  compart_list comparts;
 
   /* Per pspace data-pointers required by other GDB modules.  */
   registry<program_space> registry_fields;
