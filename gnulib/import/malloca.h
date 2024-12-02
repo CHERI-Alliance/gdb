@@ -117,9 +117,11 @@ enum
   sa_alignment_double = sa_alignof (double),
   sa_alignment_longlong = sa_alignof (long long),
   sa_alignment_longdouble = sa_alignof (long double),
+  sa_alignment_ptr = sa_alignof (void *),
   sa_alignment_max = ((sa_alignment_long - 1) | (sa_alignment_double - 1)
                       | (sa_alignment_longlong - 1)
                       | (sa_alignment_longdouble - 1)
+		      | (sa_alignment_ptr - 1)
                      ) + 1
 };
 

@@ -56,7 +56,7 @@ mmalloca (size_t n)
 
       if (mem != NULL)
         {
-          uintptr_t umem = (uintptr_t)mem, umemplus;
+          unsigned long long umem = (unsigned long long)mem, umemplus;
           /* The INT_ADD_WRAPV avoids signed integer overflow on
              theoretical platforms where UINTPTR_MAX <= INT_MAX.  */
           INT_ADD_WRAPV (umem, sizeof (small_t) + sa_alignment_max - 1,
