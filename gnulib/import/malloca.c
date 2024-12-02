@@ -47,7 +47,7 @@ mmalloca (size_t n)
 #if HAVE_ALLOCA
   /* Allocate one more word, used to determine the address to pass to freea(),
      and room for the alignment ≡ sa_alignment_max mod 2*sa_alignment_max.  */
-  uintptr_t alignment2_mask = 2 * sa_alignment_max - 1;
+  unsigned long long alignment2_mask = 2 * sa_alignment_max - 1;
   int plus = sizeof (small_t) + alignment2_mask;
   idx_t nplus;
   if (!INT_ADD_WRAPV (n, plus, &nplus) && !xalloc_oversized (nplus, 1))
@@ -56,7 +56,7 @@ mmalloca (size_t n)
 
       if (mem != NULL)
         {
-          uintptr_t umem = (uintptr_t)mem, umemplus;
+          unsigned long long umem = (unsigned long long)mem, umemplus;
           /* The INT_ADD_WRAPV avoids signed integer overflow on
              theoretical platforms where UINTPTR_MAX <= INT_MAX.  */
           INT_ADD_WRAPV (umem, sizeof (small_t) + sa_alignment_max - 1,
