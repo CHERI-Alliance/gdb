@@ -33,10 +33,14 @@ void *
 rawmemchr (const void *s, int c_in)
 {
   /* Change this typedef to experiment with performance.  */
-  typedef uintptr_t longword;
+  typedef unsigned long longword;
+#ifndef __CHERI__
   /* If you change the "uintptr_t", you should change UINTPTR_WIDTH to match.
-     This verifies that the type does not have padding bits.  */
+     This verifies that the type does not have padding bits.
+     For CHERI it is ok if this does not match. The code below does not
+     actually use uintptr_t. */
   verify (UINTPTR_WIDTH == UCHAR_WIDTH * sizeof (longword));
+#endif
 
   const unsigned char *char_ptr;
   unsigned char c = c_in;

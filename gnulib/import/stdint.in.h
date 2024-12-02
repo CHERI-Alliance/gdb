@@ -305,6 +305,10 @@ typedef gl_uint_fast32_t gl_uint_fast16_t;
    Similarly, MinGW WSL-5.4.1 <stdint.h> needs its own intptr_t and
    uintptr_t to avoid conflicting declarations of system functions like
    _findclose in <io.h>.  */
+#ifdef __CHERI__
+typedef __intcap_t gl_intptr_t;
+typedef __uintcap_t gl_uintptr_t;
+#else
 # if !((defined __KLIBC__ && defined _INTPTR_T_DECLARED) \
        || defined __MINGW32__)
 #  undef intptr_t
@@ -319,6 +323,7 @@ typedef unsigned long int gl_uintptr_t;
 #  define intptr_t gl_intptr_t
 #  define uintptr_t gl_uintptr_t
 # endif
+#endif /* __CHERI__ */
 
 /* 7.18.1.5. Greatest-width integer types */
 
