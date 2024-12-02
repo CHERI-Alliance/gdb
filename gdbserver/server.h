@@ -29,7 +29,11 @@
 
 #include <config.h>
 
+#ifdef __CHERI__
+static_assert (2 * sizeof (CORE_ADDR) >= sizeof (void *));
+#else
 static_assert (sizeof (CORE_ADDR) >= sizeof (void *));
+#endif
 
 #include "gdbsupport/version.h"
 
