@@ -40,7 +40,14 @@ riscv_linux_read_features (int tid)
   int flen;
 
   /* Figuring out xlen is easy.  */
-  features.xlen = sizeof (elf_greg_t);
+#ifdef __CHERI__
+  static_assert(sizeof(elf_greg_t) == sizeof(void *));
+  static_assert(2 * sizeof(unsigned long) == sizeof(void *));
+  features.clen = sizeof(void *);
+  features.xlen = features.clen / 2;
+#else
+  features.xlen = sizeof(elf_greg_t);
+#endif
 
   /* Start with no f-registers.  */
   features.flen = 0;
