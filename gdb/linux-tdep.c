@@ -329,9 +329,12 @@ linux_get_siginfo_type_with_fields (struct gdbarch *gdbarch,
     const int si_max_size = 128;
     int si_pad_size;
     int size_of_int = gdbarch_int_bit (gdbarch) / HOST_CHAR_BIT;
+    int size_of_ptr = gdbarch_ptr_bit (gdbarch) / HOST_CHAR_BIT;
 
     /* _pad */
-    if (gdbarch_ptr_bit (gdbarch) == 64)
+    if (size_of_ptr >= 4 * size_of_int)
+      si_pad_size = (si_max_size - size_of_ptr) / size_of_int;
+    else if (gdbarch_ptr_bit (gdbarch) >= 64)
       si_pad_size = (si_max_size / size_of_int) - 4;
     else
       si_pad_size = (si_max_size / size_of_int) - 3;
