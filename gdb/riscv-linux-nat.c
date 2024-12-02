@@ -28,10 +28,18 @@
 #include "nat/riscv-linux-tdesc.h"
 
 #include "nat/gdb_ptrace.h"
+#include "asm/ptrace.h"
 
 /* Work around glibc header breakage causing ELF_NFPREG not to be usable.  */
 #ifndef NFPREG
 # define NFPREG 33
+#endif
+
+#define PCC_IDX 0
+#ifdef __CHERI__
+#define DDC_IDX 32
+#define TAG_IDX 33
+gdb_static_assert(TAG_IDX < ELF_NGREG);
 #endif
 
 /* RISC-V Linux native additions to the default linux support.  */
@@ -45,6 +53,8 @@ public:
 
   /* Read suitable target description.  */
   const struct target_desc *read_description () override;
+
+  gdb::byte_vector read_capability (CORE_ADDR addr) override;
 };
 
 static riscv_linux_nat_target the_riscv_linux_nat_target;
@@ -58,25 +68,76 @@ supply_gregset_regnum (struct regcache *regcache, const prgregset_t *gregs,
 {
   int i;
   const elf_greg_t *regp = *gregs;
+#ifdef __CHERI__
+  int off = 0;
+  uint8_t *tags = (uint8_t *)(regp + TAG_IDX);
 
+  if (RISCV_CNULL_REGNUM <= regnum && regnum <= RISCV_PCC_REGNUM)
+    regnum = RISCV_ZERO_REGNUM + (regnum - RISCV_CNULL_REGNUM);
+  off = RISCV_CNULL_REGNUM - RISCV_ZERO_REGNUM;
+#endif
+
+#define GET_TAG(IDX) (!!(tags[(IDX) / 8] & (1U << ((IDX) % 8))))
   if (regnum == -1)
     {
       /* We only support the integer registers and PC here.  */
       for (i = RISCV_ZERO_REGNUM + 1; i < RISCV_PC_REGNUM; i++)
-	regcache->raw_supply (i, regp + i);
+	{
+	  regcache->raw_supply (i, regp + i);
+#ifdef __CHERI__
+	  regcache->raw_supply (i + off, regp + i);
+	  regcache->raw_supply_tag (i + off, GET_TAG(i));
+#endif
+	}
 
       /* GDB stores PC in reg 32.  Linux kernel stores it in reg 0.  */
-      regcache->raw_supply (RISCV_PC_REGNUM, regp + 0);
+      regcache->raw_supply (RISCV_PC_REGNUM, regp + PCC_IDX);
+#ifdef __CHERI__
+      regcache->raw_supply (RISCV_PC_REGNUM + off, regp + PCC_IDX);
+      regcache->raw_supply_tag (RISCV_PC_REGNUM + off, GET_TAG(PCC_IDX));
+#endif
 
       /* Fill the inaccessible zero register with zero.  */
       regcache->raw_supply_zeroed (RISCV_ZERO_REGNUM);
+#ifdef __CHERI__
+      regcache->raw_supply_zeroed (RISCV_ZERO_REGNUM + off);
+      regcache->raw_supply_tag (RISCV_ZERO_REGNUM + off, 0);
+
+      regcache->raw_supply (RISCV_DDC_REGNUM, regp + DDC_IDX);
+      regcache->raw_supply_tag (RISCV_DDC_REGNUM, GET_TAG(DDC_IDX));
+#endif
     }
   else if (regnum == RISCV_ZERO_REGNUM)
-    regcache->raw_supply_zeroed (RISCV_ZERO_REGNUM);
+    {
+      regcache->raw_supply_zeroed (RISCV_ZERO_REGNUM);
+#ifdef __CHERI__
+      regcache->raw_supply_zeroed (RISCV_ZERO_REGNUM + off);
+      regcache->raw_supply_tag (RISCV_ZERO_REGNUM + off, 0);
+#endif
+    }
   else if (regnum > RISCV_ZERO_REGNUM && regnum < RISCV_PC_REGNUM)
-    regcache->raw_supply (regnum, regp + regnum);
+    {
+      regcache->raw_supply (regnum, regp + regnum);
+#ifdef __CHERI__
+      regcache->raw_supply (regnum + off, regp + regnum);
+      regcache->raw_supply_tag (regnum + off, GET_TAG(regnum));
+#endif
+    }
   else if (regnum == RISCV_PC_REGNUM)
-    regcache->raw_supply (RISCV_PC_REGNUM, regp + 0);
+    {
+      regcache->raw_supply (RISCV_PC_REGNUM, regp + PCC_IDX);
+#ifdef __CHERI__
+      regcache->raw_supply (RISCV_PC_REGNUM + off, regp + PCC_IDX);
+      regcache->raw_supply_tag (RISCV_PC_REGNUM + off, GET_TAG(PCC_IDX));
+#endif
+    }
+#ifdef __CHERI__
+  else if (regnum == RISCV_DDC_REGNUM)
+    {
+      regcache->raw_supply (RISCV_DDC_REGNUM, regp + DDC_IDX);
+      regcache->raw_supply_tag (RISCV_DDC_REGNUM, GET_TAG(DDC_IDX));
+    }
+#endif
 }
 
 /* Copy all general purpose registers from regset GREGS into REGCACHE.  */
@@ -140,22 +201,62 @@ void
 fill_gregset (const struct regcache *regcache, prgregset_t *gregs, int regnum)
 {
   elf_greg_t *regp = *gregs;
+  int off = 0;
+#ifdef __CHERI__
+  uint8_t *tags = (uint8_t *)(regp + TAG_IDX);
 
+  if (RISCV_CNULL_REGNUM <= regnum && regnum <= RISCV_PCC_REGNUM)
+    regnum = RISCV_ZERO_REGNUM + (regnum - RISCV_CNULL_REGNUM);
+  off = RISCV_CNULL_REGNUM - RISCV_ZERO_REGNUM;
+#endif
+
+#define SET_TAG(IDX, VAL) do { \
+  if (VAL) \
+    tags[(IDX) / 8] &= ~(1U << ((IDX) % 8)); \
+  else \
+    tags[(IDX) / 8] |= ~(1U << ((IDX) % 8)); \
+} while (0)
   if (regnum == -1)
     {
       /* We only support the integer registers and PC here.  */
       for (int i = RISCV_ZERO_REGNUM + 1; i < RISCV_PC_REGNUM; i++)
-	regcache->raw_collect (i, regp + i);
+	{
+	  regcache->raw_collect (i + off, regp + i);
+#ifdef __CHERI__
+	  SET_TAG(i, regcache->raw_collect_tag(i + off));
+#endif
+	}
 
-      regcache->raw_collect (RISCV_PC_REGNUM, regp + 0);
+      regcache->raw_collect (RISCV_PC_REGNUM + off, regp + PCC_IDX);
+#ifdef __CHERI__
+      regcache->raw_collect (RISCV_DDC_REGNUM, regp + DDC_IDX);
+      SET_TAG(DDC_IDX, regcache->raw_collect_tag(RISCV_DDC_REGNUM));
+#endif
     }
   else if (regnum == RISCV_ZERO_REGNUM)
     /* Nothing to do here.  */
     ;
   else if (regnum > RISCV_ZERO_REGNUM && regnum < RISCV_PC_REGNUM)
-    regcache->raw_collect (regnum, regp + regnum);
+    {
+      regcache->raw_collect (regnum + off, regp + regnum);
+#ifdef __CHERI__
+      SET_TAG(regnum, regcache->raw_collect_tag(regnum + off));
+#endif
+    }
   else if (regnum == RISCV_PC_REGNUM)
-    regcache->raw_collect (RISCV_PC_REGNUM, regp + 0);
+    {
+      regcache->raw_collect (RISCV_PC_REGNUM + off, regp + PCC_IDX);
+#ifdef __CHERI__
+      SET_TAG(PCC_IDX, regcache->raw_collect_tag(regnum + off));
+#endif
+    }
+#ifdef __CHERI__
+  else if (regnum == RISCV_DDC_REGNUM)
+    {
+      regcache->raw_collect (RISCV_DDC_REGNUM, regp + DDC_IDX);
+      SET_TAG(DDC_IDX, regcache->raw_collect_tag(RISCV_DDC_REGNUM));
+    }
+#endif
 }
 
 /* Copy floating point register REGNUM (or all fp regs if REGNUM == -1)
@@ -220,6 +321,7 @@ riscv_linux_nat_target::fetch_registers (struct regcache *regcache, int regnum)
   tid = get_ptrace_pid (regcache->ptid());
 
   if ((regnum >= RISCV_ZERO_REGNUM && regnum <= RISCV_PC_REGNUM)
+      || (regnum >= RISCV_CNULL_REGNUM && regnum <= RISCV_LAST_CHERI_REGNUM)
       || (regnum == -1))
     {
       struct iovec iov;
@@ -277,6 +379,8 @@ riscv_linux_nat_target::store_registers (struct regcache *regcache, int regnum)
   tid = get_ptrace_pid (regcache->ptid ());
 
   if ((regnum >= RISCV_ZERO_REGNUM && regnum <= RISCV_PC_REGNUM)
+      || (RISCV_CNULL_REGNUM <= regnum && regnum <= RISCV_PCC_REGNUM)
+      || (regnum == RISCV_DDC_REGNUM)
       || (regnum == -1))
     {
       struct iovec iov;
@@ -326,6 +430,27 @@ riscv_linux_nat_target::store_registers (struct regcache *regcache, int regnum)
 
   /* Access to CSRs has potential security issues, don't support them for
      now.  */
+}
+
+gdb::byte_vector
+riscv_linux_nat_target::read_capability (CORE_ADDR addr)
+{
+  int tid;
+  struct user_cap ucap;
+
+  tid = get_ptrace_pid (inferior_ptid);
+
+  if (ptrace (PTRACE_PEEKCAP, tid, addr, (PTRACE_TYPE_ARG3) &ucap) != 0)
+    {
+      gdb::byte_vector err;
+      return err;
+    }
+
+  gdb::byte_vector ret (1 + sizeof(ucap.val));
+  memcpy (ret.data(), &ucap.tag, 1);
+  memcpy (ret.data() + 1, &ucap.val, sizeof(ucap.val));
+
+  return ret;
 }
 
 /* Initialize RISC-V Linux native support.  */
