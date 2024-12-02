@@ -4256,52 +4256,80 @@ static void
 riscv_cheri_print_compact_attributes (struct gdbarch *gdbarch, Cap *cap,
 				      struct ui_file *stream)
 {
+  static const struct {
+    unsigned long mask;
+    const char set[2], unset[2];
+  } permbits[] = {
+    { CAP_AP_R, "r", "." },
+    { CAP_AP_W, "w", "." },
+    { CAP_AP_X, "x", "." },
+    { CAP_AP_C, "C", "." },
+    { CAP_AP_ASR, "a", "." },
+    { CAP_AP_LM, "l", "." },
+    { CAP_AP_SL, "s", "." },
+    { CAP_AP_EL, "e", "." },
+  };
   std::string perms ("");
-  if (cap->permissions () & CC128R_PERM_CAPABILITY)
+
+  /* Tag */
+  if (cap->cr_tag)
+    perms += "V";
+  else
+    perms += "I";
+
+  perms += ":";
+
+  /* Software defined permissions. */
+  for (unsigned int i = 0; i < 4; ++i)
+    {
+      if (cap->software_permissions() & (1U << i))
+	perms += "1";
+      else
+	perms += "0";
+    }
+
+  perms += ":";
+
+  /* M-bit */
+  if (cap->cr_m)
+    perms += "I";
+  else
     perms += "C";
-  if (cap->permissions () & CC128R_PERM_WRITE)
-    perms += "W";
-  if (cap->permissions () & CC128R_PERM_READ)
-    perms += "R";
-  if (cap->permissions () & CC128R_PERM_EXECUTE)
-    perms += "X";
-  if (cap->permissions () & CC128R_PERM_ASR)
-    perms += "A";
-  if (cap->permissions () & CC128R_PERM_MBIT)
-    perms += "M";
 
+  perms += ":";
 
-  std::string attr("");
-  if (cap->cr_tag == 0)
-    attr += "invalid";
-  if (cap->type () == CC128_OTYPE_SENTRY)
+  /* Architetural permissions */
+  for (auto p: permbits)
     {
-      if (!attr.empty ())
-	attr += ",";
-      attr += "sentry";
-    }
-  else if (cap->is_sealed ())
-    {
-      if (!attr.empty ())
-	attr += ",";
-      attr += "sealed";
-    }
-  if (cap->permissions () & CC128R_PERM_EXECUTE && cap->flags() == 1)
-    {
-      if (!attr.empty ())
-	attr += ",";
-      attr += "capmode";
+      if (cap->permissions () & p.mask)
+	perms += p.set;
+      else
+	perms += p.unset;
     }
 
-  gdb_printf (stream, " [%s,%s-%s]", perms.c_str (),
+  perms += ":";
+
+  /* Capability level */
+  if (cap->global())
+    perms += "1";
+  else
+    perms += "0";
+
+  perms += ":";
+
+  /* Seal bit. */
+  if (cap->is_sealed())
+    perms += "S";
+  else
+    perms += ".";
+
+  gdb_printf (stream, " [%s:%s-%s]", perms.c_str (),
 	      paddress (gdbarch, cap->base()),
 
 	      /* Top is a 65-bit number for CHERI128 but we don't care
 		 about the last byte of the address space so we report
 		 0xff... instead of 0x10.....  */
 	      paddress (gdbarch, cap->top64()));
-  if (!attr.empty ())
-    gdb_printf (stream, " (%s)", attr.c_str ());
 }
 
 /* Verbose permission names.  */
@@ -4376,8 +4404,8 @@ riscv_cheri_print_cap (struct gdbarch *gdbarch, const gdb_byte *contents,
 
   if (xlen == 8)
     {
-      cc128_cap_t cap;
-      cc128_decompress_mem(pesbt, address, tag, &cap);
+      cc128r_cap_t cap;
+      cc128r_decompress_mem(pesbt, address, tag, &cap);
       if (compact)
 	{
 	  gdb_printf (stream, "%s", paddress (gdbarch, address));
@@ -4388,8 +4416,8 @@ riscv_cheri_print_cap (struct gdbarch *gdbarch, const gdb_byte *contents,
     }
   else
     {
-      cc64_cap_t cap;
-      cc64_decompress_mem(pesbt, address, tag, &cap);
+      cc64r_cap_t cap;
+      cc64r_decompress_mem(pesbt, address, tag, &cap);
       if (compact)
 	{
 	  gdb_printf (stream, "%s", paddress (gdbarch, address));
@@ -4417,14 +4445,14 @@ riscv_cheri_print_cap_attributes (struct gdbarch *gdbarch,
   ULONGEST address = extract_unsigned_integer (contents, xlen, byte_order);
   if (xlen == 8)
     {
-      cc128_cap_t cap;
-      cc128_decompress_mem(pesbt, address, tag, &cap);
+      cc128r_cap_t cap;
+      cc128r_decompress_mem(pesbt, address, tag, &cap);
       riscv_cheri_print_compact_attributes (gdbarch, &cap, stream);
     }
   else
     {
-      cc64_cap_t cap;
-      cc64_decompress_mem(pesbt, address, tag, &cap);
+      cc64r_cap_t cap;
+      cc64r_decompress_mem(pesbt, address, tag, &cap);
       riscv_cheri_print_compact_attributes (gdbarch, &cap, stream);
     }
 }
@@ -4453,15 +4481,15 @@ riscv_cheriabi_write_pc (struct regcache *regcache, CORE_ADDR pc)
       ULONGEST pesbt = extract_unsigned_integer (buf + xlen, xlen, byte_order);
       if (xlen == 8)
 	{
-	  cc128_cap_t cap;
-	  cc128_decompress_mem(pesbt, address, tag, &cap);
-	  tag = cc128_is_representable_with_addr(&cap, pc, false);
+	  cc128r_cap_t cap;
+	  cc128r_decompress_mem(pesbt, address, tag, &cap);
+	  tag = cc128r_is_representable_with_addr(&cap, pc, false);
 	}
       else
 	{
-	  cc64_cap_t cap;
-	  cc64_decompress_mem(pesbt, address, tag, &cap);
-	  tag = cc64_is_representable_with_addr(&cap, pc, false);
+	  cc64r_cap_t cap;
+	  cc64r_decompress_mem(pesbt, address, tag, &cap);
+	  tag = cc64r_is_representable_with_addr(&cap, pc, false);
 	}
       if (!tag)
 	regcache->raw_supply_tag (RISCV_PCC_REGNUM, tag);
