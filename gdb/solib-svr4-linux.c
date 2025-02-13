@@ -96,3 +96,16 @@ linux_lp64_svr4_solib_ops::fetch_link_map_offsets () const
 
   return lmp;
 }
+
+solib_ops_up
+make_linux_lp64_cheri_svr4_solib_ops (program_space *pspace)
+{
+  return std::make_unique<linux_lp64_cheri_svr4_solib_ops> (pspace);
+}
+
+link_map_offsets *
+linux_lp64_cheri_svr4_solib_ops::fetch_link_map_offsets () const
+{
+  return svr4_lp64_cheri_fetch_link_map_offsets ();
+}
+
