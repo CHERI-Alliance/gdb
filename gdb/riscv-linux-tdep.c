@@ -186,9 +186,11 @@ riscv_linux_init_abi (struct gdbarch_info info, struct gdbarch *gdbarch)
   set_gdbarch_software_single_step (gdbarch, riscv_software_single_step);
 
   set_solib_svr4_fetch_link_map_offsets (gdbarch,
-					 (riscv_isa_xlen (gdbarch) == 4
+					 (riscv_abi_clen (gdbarch) == 16
+					 ? svr4_lp64_cheri_fetch_link_map_offsets
+					 : (riscv_isa_xlen (gdbarch) == 4
 					  ? linux_ilp32_fetch_link_map_offsets
-					  : linux_lp64_fetch_link_map_offsets));
+					  : linux_lp64_fetch_link_map_offsets)));
 
   /* GNU/Linux uses SVR4-style shared libraries.  */
   set_gdbarch_skip_trampoline_code (gdbarch, find_solib_trampoline_target);
