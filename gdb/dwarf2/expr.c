@@ -204,9 +204,8 @@ rw_pieced_value (value *v, value *from, bool check_optimized)
 	{
 	case DWARF_VALUE_REGISTER:
 	  {
-	    frame_info_ptr next_frame
-	      = get_next_frame_sentinel_okay (frame_find_by_id (c->frame_id));
-	    gdbarch *arch = frame_unwind_arch (next_frame);
+	    frame_info_ptr frame = frame_find_by_id (c->frame_id);
+	    gdbarch *arch = get_frame_arch (frame);
 	    int gdb_regnum = dwarf_reg_to_regnum_or_error (arch, p->v.regno);
 	    ULONGEST reg_bits = 8 * register_size (arch, gdb_regnum);
 	    int optim, unavail;
@@ -226,9 +225,9 @@ rw_pieced_value (value *v, value *from, bool check_optimized)
 	    if (from == nullptr)
 	      {
 		/* Read mode.  */
-		if (!get_frame_register_bytes (next_frame, gdb_regnum,
-					       bits_to_skip / 8, buffer,
-					       &optim, &unavail))
+		if (!get_frame_register_bytes (frame, gdb_regnum,
+					       bits_to_skip / 8,
+					       buffer, &optim, &unavail))
 		  {
 		    if (optim)
 		      {
@@ -255,9 +254,9 @@ rw_pieced_value (value *v, value *from, bool check_optimized)
 		  {
 		    /* Data is copied non-byte-aligned into the register.
 		       Need some bits from original register value.  */
-		    get_frame_register_bytes (next_frame, gdb_regnum,
-					      bits_to_skip / 8, buffer, &optim,
-					      &unavail);
+		    get_frame_register_bytes (frame, gdb_regnum,
+					      bits_to_skip / 8,
+					      buffer, &optim, &unavail);
 		    if (optim)
 		      throw_error (OPTIMIZED_OUT_ERROR,
 				   _("Can't do read-modify-write to "
@@ -273,8 +272,9 @@ rw_pieced_value (value *v, value *from, bool check_optimized)
 		copy_bitwise (buffer.data (), bits_to_skip % 8,
 			      from_contents, offset,
 			      this_size_bits, bits_big_endian);
-		put_frame_register_bytes (next_frame, gdb_regnum,
-					  bits_to_skip / 8, buffer);
+		put_frame_register_bytes (frame, gdb_regnum,
+					  bits_to_skip / 8,
+					  buffer);
 	      }
 	  }
 	  break;
@@ -1031,15 +1031,12 @@ dwarf_expr_context::fetch_result (struct type *type, struct type *subobj_type,
 
 	    retval = value::allocate (subobj_type);
 
-	    if (n > max)
-	      {
-		/* The given offset is relative to the actual object.  */
-		if (gdbarch_byte_order (arch) == BFD_ENDIAN_BIG)
-		  subobj_offset += n - max;
-	      }
+	    /* The given offset is relative to the actual object.  */
+	    if (gdbarch_byte_order (arch) == BFD_ENDIAN_BIG)
+	      subobj_offset += n - max;
 
-	    copy (val->contents_all ().slice (subobj_offset, n),
-		  retval->contents_raw ().slice (0, n));
+	    copy (val->contents_all ().slice (subobj_offset, len),
+		  retval->contents_raw ());
 	  }
 	  break;
 
