@@ -1059,13 +1059,22 @@ riscv_reloc_name_lookup (bfd *abfd ATTRIBUTE_UNUSED, const char *r_name)
 reloc_howto_type *
 riscv_elf_rtype_to_howto (bfd *abfd, unsigned int r_type)
 {
+  /*                                                                                                    
+    * FIXCHERI: The warning below triggers once for each lib/binary that                                 
+    * FIXCHERI: is loaded. Silence the warning by pretending that a                                      
+    * FIXCHERI: CHERI jump slot is the same as a normal jump slot.                                     
+    * FIXCHERI: This need more debugging to fix properly.
+    */
+  if (r_type == R_RISCV_CHERI_JUMP_SLOT)
+    r_type = R_RISCV_JUMP_SLOT;
+
   if (r_type < ARRAY_SIZE (howto_table))
     return &howto_table[r_type];
   else if (r_type < R_RISCV_max + ARRAY_SIZE (howto_table_internal))
     return &howto_table_internal[r_type - R_RISCV_max];
   else
     {
-      (*_bfd_error_handler) (_("%pB: unsupported relocation type %#x"),
+      (*_bfd_error_handler) (_("%pB: unsupported xxx relocation type %#x"),
 			     abfd, r_type);
       bfd_set_error (bfd_error_bad_value);
       return NULL;
