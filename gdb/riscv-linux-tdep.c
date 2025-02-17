@@ -132,9 +132,16 @@ riscv_linux_sigframe_init (const struct tramp_frame *self,
   struct gdbarch *gdbarch = get_frame_arch (this_frame);
   int xlen = riscv_isa_xlen (gdbarch);
   int flen = riscv_isa_flen (gdbarch);
+  int cheri = 0;
   CORE_ADDR frame_sp = get_frame_sp (this_frame);
   CORE_ADDR mcontext_base;
   CORE_ADDR regs_base;
+
+  if (riscv_abi_clen(gdbarch) > xlen)
+    {
+      xlen = riscv_abi_clen(gdbarch);
+      cheri = 1;
+    }
 
   mcontext_base = frame_sp + SIGFRAME_SIGINFO_SIZE + UCONTEXT_MCONTEXT_OFFSET;
 
@@ -142,13 +149,29 @@ riscv_linux_sigframe_init (const struct tramp_frame *self,
      through x31.  */
   regs_base = mcontext_base;
   trad_frame_set_reg_addr (this_cache, RISCV_PC_REGNUM, regs_base);
+#ifdef __CHERI__
+  if (cheri)
+    trad_frame_set_reg_addr (this_cache, RISCV_PCC_REGNUM, regs_base);
+#endif
   for (int i = 1; i < 32; i++)
-    trad_frame_set_reg_addr (this_cache, RISCV_ZERO_REGNUM + i,
-			     regs_base + (i * xlen));
+    {
+      trad_frame_set_reg_addr (this_cache, RISCV_ZERO_REGNUM + i,
+			       regs_base + (i * xlen));
+#ifdef __CHERI__
+      if (cheri)
+	trad_frame_set_reg_addr (this_cache, RISCV_CNULL_REGNUM + i,
+				 regs_base + (i * xlen));
+#endif
+    }
+#ifdef __CHERI__
+  if (cheri)
+    trad_frame_set_reg_addr (this_cache, RISCV_DDC_REGNUM,
+			     regs_base + (32 * xlen));
+#endif
 
   /* Handle the FP registers.  First comes the 32 FP registers, followed by
      fcsr.  */
-  regs_base += 32 * xlen;
+  regs_base += (32 + cheri) * xlen;
   for (int i = 0; i < 32; i++)
     trad_frame_set_reg_addr (this_cache, RISCV_FIRST_FP_REGNUM + i,
 			     regs_base + (i * flen));
