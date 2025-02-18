@@ -2209,7 +2209,7 @@ const struct riscv_opcode riscv_opcodes[] =
 {"gcperm",      0, INSN_CLASS_ZCHERI, "d,WCs", MATCH_GCPERM, MASK_GCPERM, match_opcode, 0},
 {"gcbase",      0, INSN_CLASS_ZCHERI, "d,WCs", MATCH_GCBASE, MASK_GCBASE, match_opcode, 0},
 {"gclen",       0, INSN_CLASS_ZCHERI, "d,WCs", MATCH_GCLEN, MASK_GCLEN, match_opcode, 0},
-{"cram",        0, INSN_CLASS_ZCHERI, "d,WCs", MATCH_CRAM, MASK_CRAM, match_opcode, 0},
+{"cram",        0, INSN_CLASS_ZCHERI, "d,s", MATCH_CRAM, MASK_CRAM, match_opcode, 0},
 {"gchi",        0, INSN_CLASS_ZCHERI, "d,WCs", MATCH_GCHI, MASK_GCHI, match_opcode, 0},
 {"sceq",        0, INSN_CLASS_ZCHERI, "d,WCs,WCt", MATCH_SCEQ, MASK_SCEQ, match_opcode, 0},
 {"scss",        0, INSN_CLASS_ZCHERI, "d,WCs,WCt", MATCH_SCSS, MASK_SCSS, match_opcode, 0},
