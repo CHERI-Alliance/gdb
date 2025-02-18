@@ -141,6 +141,8 @@ static inline unsigned int riscv_insn_length (insn_t insn)
   ((RV_X(x, 25, 2) << 5) | (RV_X(x, 9, 3) << 2))
 #define EXTRACT_MIPS_SDP_IMM(x) \
   ((RV_X(x, 25, 2) << 5) | (RV_X(x, 10, 2) << 3))
+#define EXTRACT_ZCHERI_CBNDS_UIMM(x) \
+  (RV_X(x, 20, 5) << (RV_X(x, 25, 1) << 2))
 
 #define ENCODE_ITYPE_IMM(x) \
   (RV_X(x, 0, 12) << 20)
