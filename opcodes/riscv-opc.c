@@ -2426,19 +2426,15 @@ const struct riscv_opcode riscv_capmode_opcodes[] =
 {"amominu.d.aqrl", 64, INSN_CLASS_A, "d,t,0(WCs)", MATCH_AMOMINU_D|MASK_AQRL, MASK_AMOMINU_D|MASK_AQRL, match_opcode, INSN_DREF|INSN_8_BYTE },
 
 /* Single-precision floating-point instruction subset.  */
-{"flw",      32, INSN_CLASS_F_AND_C, "D,Cm(WCCc)", MATCH_C_FLWSP, MASK_C_FLWSP, match_opcode, INSN_ALIAS|INSN_DREF|INSN_4_BYTE },
-{"flw",      32, INSN_CLASS_F_AND_C, "CD,Ck(WCCs)", MATCH_C_FLW, MASK_C_FLW, match_opcode, INSN_ALIAS|INSN_DREF|INSN_4_BYTE },
 {"flw",       0, INSN_CLASS_F,   "D,o(WCs)",   MATCH_FLW, MASK_FLW, match_opcode, INSN_DREF|INSN_4_BYTE },
-{"fsw",      32, INSN_CLASS_F_AND_C, "CT,CM(WCCc)", MATCH_C_FSWSP, MASK_C_FSWSP, match_opcode, INSN_ALIAS|INSN_DREF|INSN_4_BYTE },
-{"fsw",      32, INSN_CLASS_F_AND_C, "CD,Ck(WCCs)", MATCH_C_FSW, MASK_C_FSW, match_opcode, INSN_ALIAS|INSN_DREF|INSN_4_BYTE },
 {"fsw",       0, INSN_CLASS_F,   "T,q(WCs)",   MATCH_FSW, MASK_FSW, match_opcode, INSN_DREF|INSN_4_BYTE },
 
 /* Double-precision floating-point instruction subset.  */
-{"fld",       0, INSN_CLASS_D_AND_C, "D,Cn(WCCc)", MATCH_C_FLDSP, MASK_C_FLDSP, match_opcode, INSN_ALIAS|INSN_DREF|INSN_8_BYTE },
-{"fld",       0, INSN_CLASS_D_AND_C, "CD,Cl(WCCs)", MATCH_C_FLD, MASK_C_FLD, match_opcode, INSN_ALIAS|INSN_DREF|INSN_8_BYTE },
+{"fld",      32, INSN_CLASS_D_AND_C, "D,Cn(WCCc)", MATCH_C_FLDSP, MASK_C_FLDSP, match_opcode, INSN_ALIAS|INSN_DREF|INSN_8_BYTE },
+{"fld",      32, INSN_CLASS_D_AND_C, "CD,Cl(WCCs)", MATCH_C_FLD, MASK_C_FLD, match_opcode, INSN_ALIAS|INSN_DREF|INSN_8_BYTE },
 {"fld",       0, INSN_CLASS_D,   "D,o(WCs)",   MATCH_FLD, MASK_FLD, match_opcode, INSN_DREF|INSN_8_BYTE },
-{"fsd",       0, INSN_CLASS_D_AND_C, "CT,CN(WCCc)", MATCH_C_FSDSP, MASK_C_FSDSP, match_opcode, INSN_ALIAS|INSN_DREF|INSN_8_BYTE },
-{"fsd",       0, INSN_CLASS_D_AND_C, "CD,Cl(WCCs)", MATCH_C_FSD, MASK_C_FSD, match_opcode, INSN_ALIAS|INSN_DREF|INSN_8_BYTE },
+{"fsd",      32, INSN_CLASS_D_AND_C, "CT,CN(WCCc)", MATCH_C_FSDSP, MASK_C_FSDSP, match_opcode, INSN_ALIAS|INSN_DREF|INSN_8_BYTE },
+{"fsd",      32, INSN_CLASS_D_AND_C, "CD,Cl(WCCs)", MATCH_C_FSD, MASK_C_FSD, match_opcode, INSN_ALIAS|INSN_DREF|INSN_8_BYTE },
 {"fsd",       0, INSN_CLASS_D,   "T,q(WCs)",   MATCH_FSD, MASK_FSD, match_opcode, INSN_DREF|INSN_8_BYTE },
 
 /* Quad-precision floating-point instruction subset.  */
@@ -2459,18 +2455,14 @@ const struct riscv_opcode riscv_capmode_opcodes[] =
 {"c.ld",     64, INSN_CLASS_C,   "Ct,Cl(WCCs)", MATCH_C_LD, MASK_C_LD, match_opcode, INSN_DREF|INSN_8_BYTE },
 {"c.sdsp",   64, INSN_CLASS_C,   "CV,CN(WCCc)", MATCH_C_SDSP, MASK_C_SDSP, match_opcode, INSN_DREF|INSN_8_BYTE },
 {"c.sd",     64, INSN_CLASS_C,   "Ct,Cl(WCCs)", MATCH_C_SD, MASK_C_SD, match_opcode, INSN_DREF|INSN_8_BYTE },
-{"c.lcsp",   64, INSN_CLASS_C,   "WCd,Cn(WCCc)",  MATCH_C_FLDSP, MASK_C_FLDSP, match_opcode, INSN_DREF|INSN_16_BYTE },
-{"c.lc",     64, INSN_CLASS_C,   "WCCt,Cl(WCCs)", MATCH_C_FLD, MASK_C_FLD, match_opcode, INSN_DREF|INSN_16_BYTE },
-{"c.scsp",   64, INSN_CLASS_C,   "WCCV,CN(WCCc)", MATCH_C_FSDSP, MASK_C_FSDSP, match_opcode, INSN_DREF|INSN_16_BYTE },
-{"c.sc",     64, INSN_CLASS_C,   "WCCt,Cl(WCCs)", MATCH_C_FSD, MASK_C_FSD, match_opcode, INSN_DREF|INSN_16_BYTE },
-{"c.fldsp",  32, INSN_CLASS_D_AND_C, "D,Cn(WCCc)",  MATCH_C_FLDSP, MASK_C_FLDSP, match_opcode, INSN_DREF|INSN_8_BYTE },
-{"c.fld",    32, INSN_CLASS_D_AND_C, "CD,Cl(WCCs)", MATCH_C_FLD, MASK_C_FLD, match_opcode, INSN_DREF|INSN_8_BYTE },
-{"c.fsdsp",  32, INSN_CLASS_D_AND_C, "CT,CN(WCCc)", MATCH_C_FSDSP, MASK_C_FSDSP, match_opcode, INSN_DREF|INSN_8_BYTE },
-{"c.fsd",    32, INSN_CLASS_D_AND_C, "CD,Cl(WCCs)", MATCH_C_FSD, MASK_C_FSD, match_opcode, INSN_DREF|INSN_8_BYTE },
-{"c.lcsp",   32, INSN_CLASS_C,   "WCd,Cm(WCCc)",  MATCH_C_FLWSP, MASK_C_FLWSP, match_opcode, INSN_DREF|INSN_8_BYTE },
-{"c.lc",     32, INSN_CLASS_C,   "WCCt,Ck(WCCs)", MATCH_C_FLW, MASK_C_FLW, match_opcode, INSN_DREF|INSN_8_BYTE },
-{"c.scsp",   32, INSN_CLASS_C,   "WCCV,CM(WCCc)", MATCH_C_FSWSP, MASK_C_FSWSP, match_opcode, INSN_DREF|INSN_8_BYTE },
-{"c.sc",     32, INSN_CLASS_C,   "WCCt,Ck(WCCs)", MATCH_C_FSW, MASK_C_FSW, match_opcode, INSN_DREF|INSN_8_BYTE },
+{"c.lcsp",   64, INSN_CLASS_ZCHERI_AND_C,   "WCd,Cn(WCCc)",  MATCH_C_FLDSP, MASK_C_FLDSP, match_opcode, INSN_DREF|INSN_16_BYTE },
+{"c.lc",     64, INSN_CLASS_ZCHERI_AND_C,   "WCCt,Cl(WCCs)", MATCH_C_FLD, MASK_C_FLD, match_opcode, INSN_DREF|INSN_16_BYTE },
+{"c.scsp",   64, INSN_CLASS_ZCHERI_AND_C,   "WCCV,CN(WCCc)", MATCH_C_FSDSP, MASK_C_FSDSP, match_opcode, INSN_DREF|INSN_16_BYTE },
+{"c.sc",     64, INSN_CLASS_ZCHERI_AND_C,   "WCCt,Cl(WCCs)", MATCH_C_FSD, MASK_C_FSD, match_opcode, INSN_DREF|INSN_16_BYTE },
+{"c.lcsp",   32, INSN_CLASS_ZCHERI_AND_C,   "WCd,Cm(WCCc)",  MATCH_C_FLWSP, MASK_C_FLWSP, match_opcode, INSN_DREF|INSN_8_BYTE },
+{"c.lc",     32, INSN_CLASS_ZCHERI_AND_C,   "WCCt,Ck(WCCs)", MATCH_C_FLW, MASK_C_FLW, match_opcode, INSN_DREF|INSN_8_BYTE },
+{"c.scsp",   32, INSN_CLASS_ZCHERI_AND_C,   "WCCV,CM(WCCc)", MATCH_C_FSWSP, MASK_C_FSWSP, match_opcode, INSN_DREF|INSN_8_BYTE },
+{"c.sc",     32, INSN_CLASS_ZCHERI_AND_C,   "WCCt,Ck(WCCs)", MATCH_C_FSW, MASK_C_FSW, match_opcode, INSN_DREF|INSN_8_BYTE },
 
 /* Zicbop instructions.  */
 {"prefetch.i",  0, INSN_CLASS_ZICBOP, "Wif(WCs)", MATCH_PREFETCH_I, MASK_PREFETCH_I, match_opcode, 0 },
