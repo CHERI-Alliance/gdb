@@ -2280,12 +2280,16 @@ const struct riscv_opcode riscv_opcodes[] =
 {"amoswap.c.aqrl", 64, INSN_CLASS_ZCHERI_AND_A, "WCd,t,0(s)", MATCH_AMOSWAP_Q | MASK_AQRL, MASK_AMOSWAP_Q | MASK_AQRL, match_opcode, INSN_DREF|INSN_16_BYTE },
 
 /* Zcherihybrid instructions.  */
+/* Capability-Inspection Instructions */
+{"gcmode",        0, INSN_CLASS_ZCHERI, "d,WCs", MATCH_GCMODE, MASK_GCMODE, match_opcode, 0},
+{"gctype",        0, INSN_CLASS_ZCHERI, "d,WCs", MATCH_GCTYPE, MASK_GCTYPE, match_opcode, 0},
+
 /* Capability-Manipulation Instructions */
 {"scmode",        0, INSN_CLASS_ZCHERI, "WCd,WCs,t", MATCH_SCMODE, MASK_SCMODE, match_opcode, 0},
 
 /* Mode Change Instructions */
-{"modesw",        0, INSN_CLASS_ZCHERI, "", MATCH_MODESW, MASK_MODESW, match_opcode, 0},
-{"c.modesw",      0, INSN_CLASS_ZCHERI_AND_C, "", MATCH_C_MODESW, MASK_C_MODESW, match_opcode, 0 },
+{"modesw.cap",        0, INSN_CLASS_ZCHERI, "", MATCH_MODESW_CAP, MASK_MODESW_CAP, match_opcode, 0},
+{"modesw.int",        0, INSN_CLASS_ZCHERI, "", MATCH_MODESW_INT, MASK_MODESW_INT, match_opcode, 0},
 
 
 /* Terminate the list.  */
