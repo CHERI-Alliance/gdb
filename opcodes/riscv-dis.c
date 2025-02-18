@@ -704,6 +704,10 @@ print_insn_args (const char *oparg, insn_t l, bfd_vma pc, disassemble_info *info
 		  print (info->stream, dis_style_immediate, "0x%x",
 			 (int) EXTRACT_OPERAND (IMM16, l) & 0xffff);
 		  break;
+		case 'b': /* Unsigned immediate (bounds), scbndsi insns. */
+		  print (info->stream, dis_style_immediate, "%d",
+			 (int) EXTRACT_ZCHERI_CBNDS_UIMM(l));
+		  break;
 		default:
 		  goto undefined_modifier;
 		}

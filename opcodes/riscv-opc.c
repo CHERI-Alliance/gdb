@@ -2226,7 +2226,7 @@ const struct riscv_opcode riscv_opcodes[] =
 {"schi",        0, INSN_CLASS_ZCHERI, "WCd,WCs,t", MATCH_SCHI, MASK_SCHI, match_opcode, 0},
 {"acperm",      0, INSN_CLASS_ZCHERI, "WCd,WCs,t", MATCH_ACPERM, MASK_ACPERM, match_opcode, 0},
 {"scbnds",      0, INSN_CLASS_ZCHERI, "WCd,WCs,t", MATCH_SCBNDS, MASK_SCBNDS, match_opcode, 0},
-{"scbndsi",     0, INSN_CLASS_ZCHERI, "WCd,WCs,j", MATCH_SCBNDSI, MASK_SCBNDSI, match_opcode, 0},
+{"scbndsi",     0, INSN_CLASS_ZCHERI, "WCd,WCs,WCb", MATCH_SCBNDSI, MASK_SCBNDSI, match_opcode, 0},
 {"scbndsr",     0, INSN_CLASS_ZCHERI, "WCd,WCs,t", MATCH_SCBNDSR, MASK_SCBNDSR, match_opcode, 0},
 {"sentry",      0, INSN_CLASS_ZCHERI, "WCd,WCs", MATCH_SENTRY, MASK_SENTRY, match_opcode, 0},
 {"cbld",        0, INSN_CLASS_ZCHERI, "WCd,WCs,WCt", MATCH_CBLD, MASK_CBLD, match_opcode, 0},
