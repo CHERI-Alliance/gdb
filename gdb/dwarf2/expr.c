@@ -1072,8 +1072,10 @@ dwarf_expr_context::fetch_result (struct type *type, struct type *subobj_type,
 	    size_t len = subobj_type->length ();
 	    size_t max = type->length ();
 
-	    if (subobj_offset + len > max)
+	    if (subobj_offset + len > max || subobj_offset >= n)
 	      invalid_synthetic_pointer ();
+	    if (len > n - subobj_offset)
+	      len = n - subobj_offset;
 
 	    retval = value::allocate (subobj_type);
 
@@ -1082,7 +1084,7 @@ dwarf_expr_context::fetch_result (struct type *type, struct type *subobj_type,
 	      subobj_offset += n - max;
 
 	    copy (val->contents_all ().slice (subobj_offset, len),
-		  retval->contents_raw ());
+		  retval->contents_raw ().slice (0, len));
 	  }
 	  break;
 
