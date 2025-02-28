@@ -29,6 +29,20 @@
 #include "nat/gdb_ptrace.h"
 #include "asm/ptrace.h"
 
+/* If we're not building with the CHERI header files these will be undefined */
+#if !defined(PTRACE_POKECAP) && !defined(PTRACE_PEEKCAP)
+
+struct user_cap {
+	unsigned __int128 val;
+	__u8 tag;
+	__u8 _pad[sizeof(unsigned __int128) - 1];
+};
+
+#define PTRACE_PEEKCAP            12
+#define PTRACE_POKECAP            13
+
+#endif
+
 /* Work around glibc header breakage causing ELF_NFPREG not to be usable.  */
 #ifndef NFPREG
 # define NFPREG 33
