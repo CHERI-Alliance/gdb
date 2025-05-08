@@ -1137,7 +1137,8 @@ print_got_info (const std::vector<target_section> *t, regex_t *pattern)
 	  && regexec (pattern, bfd_get_filename (bfd), 0, nullptr, 0) != 0)
 	continue;
 
-      if (startswith (bfd_section_name (psect), ".got"))
+      if (startswith (bfd_section_name (psect), ".got")
+	  || startswith (bfd_section_name (psect), ".captable"))
 	display_got (p);
     }
 }
