@@ -76,8 +76,13 @@ public:
      map.  */
   static addr_type form_addr (const gdb_byte *info_ptr)
   {
+  #ifdef __CHERI_PURE_CAPABILITY__
+    static_assert (sizeof (addr_type) >= sizeof (ptraddr_t));
+    return (addr_type) (ptraddr_t) info_ptr;
+  #else
     static_assert (sizeof (addr_type) >= sizeof (uintptr_t));
     return (addr_type) (uintptr_t) info_ptr;
+  #endif
   }
 
   /* Add a new entry to this map.  DIEs from START to END, inclusive,
