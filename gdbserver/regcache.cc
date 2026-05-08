@@ -311,6 +311,14 @@ register_tag (const struct regcache *regcache, int n)
   return gdb::make_array_view (regcache->registers + reg.offset / 8, 1);
 }
 
+static gdb::array_view<gdb_byte>
+register_data_tag (const struct regcache *regcache, int n)
+{
+  const gdb::reg &reg = find_register_by_number (regcache->tdesc, n);
+  return gdb::make_array_view (regcache->registers + reg.offset / 8,
+			       reg.size / 8);
+}
+
 void
 supply_register (struct regcache *regcache, int n, const void *vbuf)
 {
@@ -510,10 +518,14 @@ collect_register_as_string (struct regcache *regcache, int n, char *buf)
 {
   int reg_size = register_size (regcache->tdesc, n);
 
-  if (regcache->get_register_status (n) == REG_VALID)
-    bin2hex (register_data (regcache, n), buf);
-  else
+  if (regcache->get_register_status (n) == REG_VALID) {
+    if (register_tagged (regcache->tdesc, n))
+      bin2hex (register_data_tag (regcache, n), buf);
+    else
+      bin2hex (register_data (regcache, n), buf);
+  } else {
     memset (buf, 'x', reg_size * 2);
+  }
 
   buf += reg_size * 2;
   *buf = '\0';
