@@ -225,9 +225,9 @@ fill_gregset (const struct regcache *regcache, prgregset_t *gregs, int regnum)
 
 #define SET_TAG(IDX, VAL) do { \
   if (VAL) \
-    tags[(IDX) / 8] &= ~(1U << ((IDX) % 8)); \
+    tags[(IDX) / 8] |= (1U << ((IDX) % 8)); \
   else \
-    tags[(IDX) / 8] |= ~(1U << ((IDX) % 8)); \
+    tags[(IDX) / 8] &= ~(1U << ((IDX) % 8)); \
 } while (0)
   if (regnum == -1)
     {
