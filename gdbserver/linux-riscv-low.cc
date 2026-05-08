@@ -29,6 +29,19 @@
 # define NFPREG 33
 #endif
 
+#ifdef __CHERI__
+#define REGSET_LEN_64BIT  16
+
+#define RISCV_GREGS_NUM  32
+
+#define RISCV_PTRACE_PCC_IDX 0
+#define RISCV_PTRACE_DDC_IDX 32
+#define RISCV_PTRACE_TAG_IDX 33
+static_assert(RISCV_PTRACE_TAG_IDX < ELF_NGREG);
+#else
+#define REGSET_LEN_64BIT  8
+#endif
+
 /* Linux target op definitions for the RISC-V architecture.  */
 
 class riscv_target : public linux_process_target
@@ -103,6 +116,31 @@ riscv_target::low_arch_setup ()
 static void
 riscv_fill_gregset (struct regcache *regcache, void *buf)
 {
+#ifdef __CHERI__
+  const struct target_desc *tdesc = regcache->tdesc;
+  elf_gregset_t *regset = (elf_gregset_t *) buf;
+  uint8_t *tags = (uint8_t *)(*regset + RISCV_PTRACE_TAG_IDX);
+
+#define SET_TAG(IDX, VAL) do { \
+  if (VAL) \
+    tags[(IDX) / 8] |= (1U << ((IDX) % 8)); \
+  else \
+    tags[(IDX) / 8] &= ~(1U << ((IDX) % 8)); \
+} while (0)
+
+  int cnull_regno = find_regno (tdesc, "cnull");
+
+  collect_register_by_name (regcache, "pcc", *regset + RISCV_PTRACE_PCC_IDX);
+  SET_TAG(RISCV_PTRACE_PCC_IDX, regcache_get_tag_by_name (regcache, "pcc"));
+
+  collect_register_by_name (regcache, "ddc", *regset + RISCV_PTRACE_DDC_IDX);
+  SET_TAG(RISCV_PTRACE_DDC_IDX, regcache_get_tag_by_name (regcache, "ddc"));
+
+  for (int i = 1; i < RISCV_GREGS_NUM; i++) {
+    collect_register (regcache, cnull_regno + i, *regset + i);
+    SET_TAG(i, regcache_get_tag (regcache, cnull_regno + i));
+  }
+#else
   const struct target_desc *tdesc = regcache->tdesc;
   elf_gregset_t *regset = (elf_gregset_t *) buf;
   int regno = find_regno (tdesc, "zero");
@@ -111,6 +149,7 @@ riscv_fill_gregset (struct regcache *regcache, void *buf)
   collect_register_by_name (regcache, "pc", *regset);
   for (i = 1; i < ARRAY_SIZE (*regset); i++)
     collect_register (regcache, regno + i, *regset + i);
+#endif
 }
 
 /* Supply GPRs from BUF into REGCACHE.  */
@@ -118,6 +157,32 @@ riscv_fill_gregset (struct regcache *regcache, void *buf)
 static void
 riscv_store_gregset (struct regcache *regcache, const void *buf)
 {
+#ifdef __CHERI__
+  const elf_gregset_t *regset = (const elf_gregset_t *) buf;
+  const struct target_desc *tdesc = regcache->tdesc;
+  const uint8_t *tags = (uint8_t *)(*regset + RISCV_PTRACE_TAG_IDX);
+#define GET_TAG(IDX) (!!(tags[(IDX) / 8] & (1U << ((IDX) % 8))))
+
+  int zero_regno = find_regno (tdesc, "zero");
+  int cnull_regno = find_regno (tdesc, "cnull");
+
+  supply_register_by_name (regcache, "pc", *regset + RISCV_PTRACE_PCC_IDX);
+  supply_register_zeroed (regcache, zero_regno);
+
+  supply_register_by_name (regcache, "pcc", *regset + RISCV_PTRACE_PCC_IDX);
+  regcache_set_tag_by_name (regcache, "pcc", GET_TAG(RISCV_PTRACE_PCC_IDX));
+
+  supply_register_by_name (regcache, "ddc", *regset + RISCV_PTRACE_DDC_IDX);
+  regcache_set_tag_by_name (regcache, "ddc", GET_TAG(RISCV_PTRACE_DDC_IDX));
+
+  supply_register_zeroed (regcache, cnull_regno);
+
+  for (int i = 1; i < RISCV_GREGS_NUM; i++) {
+    supply_register(regcache, zero_regno + i, *regset + i);
+    supply_register(regcache, cnull_regno + i, *regset + i);
+    regcache_set_tag (regcache, cnull_regno + i, GET_TAG(i));
+  }
+#else
   const elf_gregset_t *regset = (const elf_gregset_t *) buf;
   const struct target_desc *tdesc = regcache->tdesc;
   int regno = find_regno (tdesc, "zero");
@@ -127,6 +192,7 @@ riscv_store_gregset (struct regcache *regcache, const void *buf)
   supply_register_zeroed (regcache, regno);
   for (i = 1; i < ARRAY_SIZE (*regset); i++)
     supply_register (regcache, regno + i, *regset + i);
+#endif
 }
 
 /* Collect FPRs from REGCACHE into BUF.  */
@@ -231,7 +297,7 @@ riscv_target::low_get_pc (regcache *regcache)
 {
   elf_gregset_t regset;
 
-  if (sizeof (regset[0]) == 8)
+  if (sizeof (regset[0]) == REGSET_LEN_64BIT)
     return linux_get_pc_64bit (regcache);
   else
     return linux_get_pc_32bit (regcache);
@@ -244,7 +310,7 @@ riscv_target::low_set_pc (regcache *regcache, CORE_ADDR newpc)
 {
   elf_gregset_t regset;
 
-  if (sizeof (regset[0]) == 8)
+  if (sizeof (regset[0]) == REGSET_LEN_64BIT)
     linux_set_pc_64bit (regcache, newpc);
   else
     linux_set_pc_32bit (regcache, newpc);
