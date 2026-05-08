@@ -343,6 +343,22 @@ regcache::raw_supply (int n, gdb::array_view<const gdb_byte> src)
     }
 }
 
+void
+regcache_set_tag (struct regcache *regcache, int n, bool tag)
+{
+  if (register_tagged (regcache->tdesc, n))
+    regcache->raw_supply_tag (n, tag);
+}
+
+#ifndef IN_PROCESS_AGENT
+void
+regcache_set_tag_by_name (struct regcache *regcache,
+		    const char *name, bool tag)
+{
+  regcache_set_tag (regcache, find_regno (regcache->tdesc, name), tag);
+}
+#endif
+
 /* See gdbsupport/common-regcache.h.  */
 
 void
@@ -437,6 +453,13 @@ regcache::raw_collect (int n, gdb::array_view<gdb_byte> dst) const
   copy (src, dst);
 }
 
+bool
+regcache_get_tag (struct regcache *regcache, int n)
+{
+  return register_tagged (regcache->tdesc, n) ?
+	 regcache->raw_collect_tag(n) : false;
+}
+
 /* See gdbsupport/common-regcache.h.  */
 
 bool
@@ -501,6 +524,13 @@ collect_register_by_name (struct regcache *regcache,
 			  const char *name, void *buf)
 {
   collect_register (regcache, find_regno (regcache->tdesc, name), buf);
+}
+
+bool
+regcache_get_tag_by_name (struct regcache *regcache,
+			  const char *name)
+{
+  return regcache_get_tag(regcache, find_regno (regcache->tdesc, name));
 }
 
 /* Special handling for register PC.  */

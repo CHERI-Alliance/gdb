@@ -168,6 +168,16 @@ void collect_register_as_string (struct regcache *regcache, int n, char *buf);
 void collect_register_by_name (struct regcache *regcache,
 			       const char *name, void *buf);
 
+void regcache_set_tag (struct regcache *regcache, int n, bool tag);
+
+void regcache_set_tag_by_name (struct regcache *regcache,
+			       const char *name, bool tag);
+
+bool regcache_get_tag (struct regcache *regcache, int n);
+
+bool regcache_get_tag_by_name (struct regcache *regcache,
+			       const char *name);
+
 /* Read a raw register as an unsigned integer.  Convenience wrapper
    around regcache_raw_get_unsigned that takes a register name instead
    of a register number.  */
