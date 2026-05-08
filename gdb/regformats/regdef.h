@@ -26,7 +26,8 @@ struct reg
   reg (int _offset)
     : name (""),
       offset (_offset),
-      size (0)
+      size (0),
+      tagged (false)
   {}
 
   reg (const char *_name, int _offset, int _size, bool _tagged = false)
