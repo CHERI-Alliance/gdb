@@ -24,6 +24,9 @@
 #include "nat/riscv-linux-tdesc.h"
 #include "opcode/riscv.h"
 
+#include "nat/gdb_ptrace.h"
+#include "asm/ptrace.h"
+
 /* Work around glibc header breakage causing ELF_NFPREG not to be usable.  */
 #ifndef NFPREG
 # define NFPREG 33
@@ -53,6 +56,12 @@ public:
   int breakpoint_kind_from_pc (CORE_ADDR *pcptr) override;
 
   const gdb_byte *sw_breakpoint_from_kind (int kind, int *size) override;
+
+  bool supports_qxfer_capability () override;
+
+  int qxfer_capability (const CORE_ADDR address, unsigned char *readbuf,
+			unsigned const char *writebuf,
+			CORE_ADDR offset, int len) override;
 
 protected:
 
@@ -376,6 +385,41 @@ riscv_target::low_breakpoint_at (CORE_ADDR pc)
   else
     return false;
 }
+
+bool
+riscv_target::supports_qxfer_capability ()
+{
+#ifdef __CHERI__
+  return true;
+#else
+  return false;
+#endif
+}
+
+int
+riscv_target::qxfer_capability (const CORE_ADDR address,
+				unsigned char *readbuf,
+				unsigned const char *writebuf,
+				CORE_ADDR offset, int len)
+{
+#ifdef __CHERI__
+  if (readbuf != nullptr)
+    {
+      int tid = current_thread->id.lwp ();
+      struct user_cap ucap;
+
+      if (ptrace (PTRACE_PEEKCAP, tid, address, (PTRACE_TYPE_ARG3) &ucap) == 0)
+        {
+          memcpy (readbuf, &ucap.tag, 1);
+          memcpy (readbuf + 1, &ucap.val, sizeof(ucap.val));
+
+          return sizeof (ucap.val) + 1;
+	}
+    }
+#endif
+  return 0;
+}
+
 
 /* The linux target ops object.  */
 
