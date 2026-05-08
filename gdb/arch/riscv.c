@@ -85,16 +85,16 @@ riscv_create_target_description (const struct riscv_gdbarch_features features)
   else if (features.xlen == 8)
     regnum = create_feature_riscv_64bit_cpu (tdesc.get (), regnum);
 
-  if (features.clen == 8)
-    regnum = create_feature_riscv_32bit_cheri64 (tdesc.get (), regnum);
-  else if (features.clen == 16)
-    regnum = create_feature_riscv_64bit_cheri128 (tdesc.get (), regnum);
-
   /* For now we only support creating 32-bit or 64-bit f-registers.  */
   if (features.flen == 4)
     regnum = create_feature_riscv_32bit_fpu (tdesc.get (), regnum);
   else if (features.flen == 8)
     regnum = create_feature_riscv_64bit_fpu (tdesc.get (), regnum);
+
+  if (features.clen == 8)
+    regnum = create_feature_riscv_32bit_cheri64 (tdesc.get (), regnum);
+  else if (features.clen == 16)
+    regnum = create_feature_riscv_64bit_cheri128 (tdesc.get (), regnum);
 
   /* Currently GDB only supports vector features coming from remote
      targets.  We don't support creating vector features on native targets
