@@ -80,6 +80,10 @@ protected:
   void low_set_pc (regcache *regcache, CORE_ADDR newpc) override;
 
   bool low_breakpoint_at (CORE_ADDR pc) override;
+
+  int low_auxv_wordsize (int pid, const int is_elf64) override;
+
+  int low_get_auxv (int pid, int wordsize, CORE_ADDR match, CORE_ADDR *valp) override;
 };
 
 /* The singleton target ops object.  */
@@ -118,6 +122,60 @@ riscv_target::low_arch_setup ()
     }
 
   current_process ()->tdesc = tdesc.release ();
+}
+
+int
+riscv_target::low_auxv_wordsize (int pid, const int is_elf64)
+{
+  if (is_elf64)
+    {
+      gdb_byte data[2 * 8];
+      int offset = 0;
+
+      while (the_target->read_auxv (pid, offset, data, sizeof (data))
+             == sizeof (data))
+        {
+          CORE_ADDR *entry_type = (CORE_ADDR *) data;
+
+          if (*entry_type > AT_MINSIGSTKSZ)
+            return 16;
+
+          if (*entry_type == AT_NULL)
+            break;
+
+          offset += sizeof (data);
+        }
+    }
+
+  return linux_process_target::low_auxv_wordsize (pid, is_elf64);
+}
+
+int
+riscv_target::low_get_auxv (int pid, int wordsize, CORE_ADDR match,
+			      CORE_ADDR *valp)
+{
+  if (wordsize == 16)
+    {
+      gdb_byte data [2 * 16];
+      int offset = 0;
+
+      while (the_target->read_auxv (pid, offset, data, sizeof (data))
+	     == sizeof (data))
+	{
+	  uint64_t *data_p = (uint64_t *) data;
+	  if (data_p[0] == match)
+	    {
+	      *valp = data_p[2];
+	      return 1;
+	    }
+
+	  offset += sizeof (data);
+	}
+
+      return 0;
+    }
+
+  return linux_process_target::low_get_auxv (pid, wordsize, match, valp);
 }
 
 /* Collect GPRs from REGCACHE into BUF.  */
