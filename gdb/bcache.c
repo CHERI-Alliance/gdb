@@ -24,6 +24,10 @@
 
 #ifdef __CHERI_PURE_CAPABILITY__
 #include "cheriintrin.h"
+
+#ifndef __riscv_zcheripurecap
+#define CHERI_PERM_WRITE	(CHERI_PERM_STORE | CHERI_PERM_STORE_CAP)
+#endif
 #else
 #define cheri_bounds_set(p, l) (p)
 #define cheri_perms_clear(p, m) (p)
@@ -72,7 +76,7 @@ bcache::expand_hash_table ()
 {
   /* A table of good hash table sizes.  Whenever we grow, we pick the
      next larger size from this table.  sizes[i] is close to 1 << (i+10),
-     so we roughly double the table size each time.  After we fall off 
+     so we roughly double the table size each time.  After we fall off
      the end of this table, we just double.  Don't laugh --- there have
      been executables sighted with a gigabyte of debug info.  */
   static const unsigned long sizes[] = {
@@ -189,7 +193,7 @@ bcache::insert (const void *addr, int length, bool *added)
 	  if (s->length == length
 	      && this->compare (&s->d.data, addr, length))
 	    return cheri_perms_clear (cheri_bounds_set (&s->d.data, length),
-				      CHERI_PERM_STORE | CHERI_PERM_STORE_CAP);
+				      CHERI_PERM_WRITE);
 	  else
 	    m_half_hash_miss_count++;
 	}
@@ -215,7 +219,7 @@ bcache::insert (const void *addr, int length, bool *added)
       *added = true;
 
     return cheri_perms_clear (cheri_bounds_set (&newobj->d.data, length),
-			      CHERI_PERM_STORE | CHERI_PERM_STORE_CAP);
+			      CHERI_PERM_WRITE);
   }
 }
 
@@ -292,7 +296,7 @@ bcache::print_statistics (const char *type)
 	if (s)
 	  {
 	    occupied_buckets++;
-	    
+
 	    while (s)
 	      {
 		gdb_assert (b < m_num_buckets);
@@ -353,7 +357,7 @@ bcache::print_statistics (const char *type)
     gdb_printf ("%ld\n", m_unique_size / m_unique_count);
   else
     /* i18n: "Average entry size: (not applicable)".  */
-    gdb_printf (_("(not applicable)\n"));    
+    gdb_printf (_("(not applicable)\n"));
   gdb_printf (_("    Median entry size:  %d\n"), median_entry_size);
   gdb_printf ("\n");
 
@@ -366,7 +370,7 @@ Total memory used by bcache, including overhead: %ld\n"),
   print_percentage (m_total_size - m_structure_size, m_total_size);
   gdb_printf ("\n");
 
-  gdb_printf (_("    Hash table size:           %3d\n"), 
+  gdb_printf (_("    Hash table size:           %3d\n"),
 	      m_num_buckets);
   gdb_printf (_("    Hash table expands:        %lu\n"),
 	      m_expand_count);
@@ -384,7 +388,7 @@ Total memory used by bcache, including overhead: %ld\n"),
   else
     /* i18n: "Average hash chain length: (not applicable)".  */
     gdb_printf (_("(not applicable)\n"));
-  gdb_printf (_("    Maximum hash chain length: %3d\n"), 
+  gdb_printf (_("    Maximum hash chain length: %3d\n"),
 	      max_chain_length);
   gdb_printf ("\n");
 }
