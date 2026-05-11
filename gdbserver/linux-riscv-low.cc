@@ -21,11 +21,17 @@
 #include "linux-low.h"
 #include "tdesc.h"
 #include "elf/common.h"
+#include "elf/riscv.h"
 #include "nat/riscv-linux-tdesc.h"
 #include "opcode/riscv.h"
 
 #include "nat/gdb_ptrace.h"
 #include "asm/ptrace.h"
+
+#include <elf.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <limits.h>
 
 /* Work around glibc header breakage causing ELF_NFPREG not to be usable.  */
 #ifndef NFPREG
@@ -81,10 +87,68 @@ protected:
 
   bool low_breakpoint_at (CORE_ADDR pc) override;
 
+  const struct link_map_offsets *low_fetch_linkmap_offsets (int is_elf64) override;
+
   int low_auxv_wordsize (int pid, const int is_elf64) override;
 
   int low_get_auxv (int pid, int wordsize, CORE_ADDR match, CORE_ADDR *valp) override;
 };
+
+/* Return non-zero if HEADER is a CHERI ELF file,
+   and -1 if the file is not a valid file.  */
+
+static int
+elf_cheri_header_p (const Elf64_Ehdr *header)
+{
+  unsigned int e_machine;
+  unsigned int e_flags;
+
+  if (header->e_ident[EI_MAG0] == ELFMAG0
+      && header->e_ident[EI_MAG1] == ELFMAG1
+      && header->e_ident[EI_MAG2] == ELFMAG2
+      && header->e_ident[EI_MAG3] == ELFMAG3
+      && header->e_machine == EM_RISCV)
+      return header->e_flags & EF_RISCV_CHERIABI ?
+             1 : 0;
+
+  return -1;
+}
+
+/* Return non-zero if FILE is a CHERI ELF file,
+   zero if the file is not a CHERI ELF file,
+   and -1 if the file is not accessible or doesn't exist.  */
+
+static int
+elf_cheri_file_p (const char *file)
+{
+  Elf64_Ehdr header;
+  int fd;
+
+  fd = open (file, O_RDONLY);
+  if (fd < 0)
+    return -1;
+
+  if (read (fd, &header, sizeof (header)) != sizeof (header))
+    {
+      close (fd);
+      return 0;
+    }
+  close (fd);
+
+  return elf_cheri_header_p (&header);
+}
+
+/* Accepts an integer PID; Returns true if the executable PID is
+   running is a CHERI ELF file.  */
+
+int
+linux_pid_exe_is_elf_cheri_file (int pid)
+{
+  char file[PATH_MAX];
+
+  sprintf (file, "/proc/%d/exe", pid);
+  return elf_cheri_file_p (file);
+}
 
 /* The singleton target ops object.  */
 
@@ -122,6 +186,33 @@ riscv_target::low_arch_setup ()
     }
 
   current_process ()->tdesc = tdesc.release ();
+}
+
+
+static const struct link_map_offsets lmo_cheri_64bit_offsets =
+  {
+    0,     /* r_version offset. */
+    16,    /* r_debug.r_map offset.  */
+    64,    /* r_debug_extended.r_next.  */
+    0,     /* l_addr offset in link_map.  */
+    16,    /* l_name offset in link_map.  */
+    32,    /* l_ld offset in link_map.  */
+    48,    /* l_next offset in link_map.  */
+    64     /* l_prev offset in link_map.  */
+  };
+
+const struct link_map_offsets *
+riscv_target::low_fetch_linkmap_offsets (int is_elf64)
+{
+  if (is_elf64)
+    {
+      int pid = current_thread->id.pid ();
+
+      if (linux_pid_exe_is_elf_cheri_file(pid) > 0)
+	return &lmo_cheri_64bit_offsets;
+    }
+
+  return linux_process_target::low_fetch_linkmap_offsets (is_elf64);
 }
 
 int
